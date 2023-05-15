@@ -7,7 +7,7 @@ from typing import Optional
 from vocode import getenv
 from vocode.streaming.agent.base_agent import BaseAgent
 from vocode.streaming.agent.factory import AgentFactory
-from vocode.streaming.models.agent import AgentConfig
+from vocode.streaming.models.agent import AgentConfig, ChatGPTAgentConfig
 from vocode.streaming.models.events import PhoneCallConnectedEvent, PhoneCallEndedEvent
 
 from vocode.streaming.streaming_conversation import StreamingConversation
@@ -79,6 +79,16 @@ class Call(StreamingConversation):
         )
         self.twilio_sid = twilio_sid
         self.latest_media_timestamp = 0
+        call = self.twilio_client.calls.get(self.twilio_sid)
+        self.twilio_from = call.to
+
+    def get_called_number(self):
+        try:
+            call = self.twilio_client.calls.get(self.twilio_sid)
+            return call.to
+        except Exception as e:
+            self.logger.error(f"Could not fetch call details. Invalid Twilio SID: {e}")
+            return None
 
     @staticmethod
     def from_call_config(
@@ -92,11 +102,16 @@ class Call(StreamingConversation):
         synthesizer_factory: SynthesizerFactory = SynthesizerFactory(),
         events_manager: Optional[EventsManager] = None,
     ):
+        agent_config = call_config.agent_config
+        if isinstance(agent_config, ChatGPTAgentConfig):
+            called_number = call_config.get_called_number()
+            agent_config.called_number = called_number
+        
         return Call(
             base_url=base_url,
             logger=logger,
             config_manager=config_manager,
-            agent_config=call_config.agent_config,
+            agent_config=agent_config,
             transcriber_config=call_config.transcriber_config,
             synthesizer_config=call_config.synthesizer_config,
             twilio_config=call_config.twilio_config,
