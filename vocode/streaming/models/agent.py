@@ -77,6 +77,16 @@ class ChatGPTAgentConfig(AgentConfig, type=AgentType.CHAT_GPT.value):
     max_tokens: int = LLM_AGENT_DEFAULT_MAX_TOKENS
     cut_off_response: Optional[CutOffResponse] = None
 
+class ChatGPTCustomAgentConfig(AgentConfig, type=AgentType.CHAT_GPT.value):
+    prompt_preamble: str
+    expected_first_prompt: Optional[str] = None
+    model_name: str = CHAT_GPT_AGENT_DEFAULT_MODEL_NAME
+    temperature: float = LLM_AGENT_DEFAULT_TEMPERATURE
+    max_tokens: int = LLM_AGENT_DEFAULT_MAX_TOKENS
+    cut_off_response: Optional[CutOffResponse] = None
+    services: str
+    company: str
+    token: str
 
 class ChatAnthropicAgentConfig(AgentConfig, type=AgentType.CHAT_ANTHROPIC):
     model_name: str = CHAT_ANTHROPIC_DEFAULT_MODEL_NAME
