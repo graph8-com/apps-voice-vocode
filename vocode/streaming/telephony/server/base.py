@@ -144,6 +144,21 @@ class TelephonyServer:
             )
 
         return route
+    
+    def add_inbound_route(self, config: InboundCallConfig):
+        self.router.add_api_route(
+            config.url,
+            self.create_inbound_route(
+                agent_config=config.agent_config,
+                twilio_config=config.twilio_config,
+                transcriber_config=config.transcriber_config,
+                synthesizer_config=config.synthesizer_config,
+            ),
+            methods=["POST"],
+        )
+        self.logger.info(
+            f"Set up inbound call TwiML at https://{self.base_url}{config.url}"
+        )
 
     async def end_outbound_call(self, conversation_id: str):
         # TODO validation via twilio_client
