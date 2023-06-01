@@ -119,6 +119,7 @@ class Call(StreamingConversation):
             self.logger.info(f"Call answered by {twilio_call.answered_by}")
             twilio_call.update(status="completed")
         else:
+            self.logger.info(f"called: {twilio_call.to}, caller: {twilio_call.from_formatted}")
             await self.wait_for_twilio_start(ws)
             await super().start()
             self.events_manager.publish_event(
