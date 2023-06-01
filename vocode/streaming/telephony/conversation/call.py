@@ -123,7 +123,7 @@ class Call(StreamingConversation):
             await super().start()
             self.events_manager.publish_event(
                 PhoneCallConnectedEvent(conversation_id=self.id,
-                                        to_phone_number=twilio_call.to_formatted,
+                                        to_phone_number=twilio_call.to,
                                         from_phone_number=twilio_call.from_formatted)
             )
             while self.active:
