@@ -5,6 +5,8 @@ from vocode.streaming.models.model import BaseModel
 class ActionType(str, Enum):
     BASE = "action_base"
     NYLAS_SEND_EMAIL = "action_nylas_send_email"
+    CHECK_AVAILABILITY = "check_availability"
+    BOOK_APPOINTMENT = "book_appointment"
 
 
 class ActionInput(BaseModel):
