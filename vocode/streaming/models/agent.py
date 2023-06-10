@@ -31,7 +31,7 @@ class AgentType(str, Enum):
     RESTFUL_USER_IMPLEMENTED = "agent_restful_user_implemented"
     WEBSOCKET_USER_IMPLEMENTED = "agent_websocket_user_implemented"
     ACTION = "agent_action"
-
+    FOLKS_ACTION = "folks_config"
 
 class FillerAudioConfig(BaseModel):
     silence_threshold_seconds: float = FILLER_AUDIO_DEFAULT_SILENCE_THRESHOLD_SECONDS
@@ -101,6 +101,15 @@ class ActionAgentConfig(AgentConfig, type=AgentType.ACTION):
     model_name: str = ACTION_AGENT_DEFAULT_MODEL_NAME
     temperature: float = LLM_AGENT_DEFAULT_TEMPERATURE
     max_tokens: int = LLM_AGENT_DEFAULT_MAX_TOKENS
+
+class FolksActionAgentConfig(AgentConfig, type=AgentType.FOLKS_ACTION):
+    actions: List[ActionType]
+    model_name = "gpt-4"
+    temperature = 0.0
+    max_tokens = 500
+    services: str
+    company: str
+    token: str
 
 
 class InformationRetrievalAgentConfig(

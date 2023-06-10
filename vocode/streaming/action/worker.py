@@ -26,13 +26,16 @@ class ActionsWorker(InterruptibleWorker):
         )
         self.action_factory = action_factory
 
-    def process(self, item: InterruptibleEvent[ActionInput]):
-        action_input = item.payload
-        action = self.action_factory.create_action(action_input.action_type)
-        action_output = action.run(action_input.params)
-        self.produce_interruptible_event_nonblocking(
-            ActionResultAgentInput(
-                conversation_id=action_input.conversation_id,
-                action_output=action_output,
+    async def process(self, item: InterruptibleEvent[ActionInput]):
+        try:
+            action_input = item.payload
+            action = self.action_factory.create_action(action_input.action_type)
+            action_output = action.run(action_input.params, action_input.token)
+            self.produce_interruptible_event_nonblocking(
+                ActionResultAgentInput(
+                    conversation_id=action_input.conversation_id,
+                    action_output=action_output,
+                )
             )
-        )
+        except Exception as e:
+            print(f"An error occurred: {e}")
