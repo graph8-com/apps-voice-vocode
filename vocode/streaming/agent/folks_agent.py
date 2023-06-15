@@ -160,6 +160,10 @@ class FolksActionAgent(BaseAgent[FolksActionAgentConfig]):
             location_name, service, date, time = extracted_parameters.split("|")
             location_id = self.add_location_id(location_name)
             extracted_parameters = extracted_parameters.replace(location_name, location_id)
+        if extracted_action == "book_appointment":
+            name, phone, location_name, service, date, time = extracted_parameters.split("|")
+            location_id = self.add_location_id(location_name)
+            extracted_parameters = extracted_parameters.replace(location_name, location_id)
         
         action_inputs = []
         for action_type in self.agent_config.actions:

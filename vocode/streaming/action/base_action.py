@@ -43,7 +43,7 @@ class GetServices(BaseAction[ServicesOutput]):
                 print("Request failed with status code:", response.status_code, response.json())
 
     def run(self, params, token):
-        return self.get_services(token, params)
+        return ServicesOutput(response=str(self.get_services(token, params)))
 
 
 class GetAvailability(BaseAction[AvailabilityOutput]):
@@ -154,34 +154,30 @@ class Scheduler(BaseAction[SchedulerOutput]):
         except KeyError:
             print("Key 'customer' not found in response JSON.")
 
-    def get_location_sversion_and_variation_id(self, service, token):
-        try:
+    def get_service_data(self, token, service, location_id):
             url = "https://connect.squareup.com/v2/catalog/list"
             headers = {
                 "Square-Version": "2023-04-19",
                 "Authorization": f"Bearer {token}",
                 "Content-Type": "application/json"
             }
+
             response = requests.get(url, headers=headers)
-            target_item_name = f"{service}"
+
             if response.status_code == 200:
                 data = response.json()
-                for item in data['objects']:
-                    if item['type'] == 'ITEM' and item['item_data']['name'] == target_item_name:
-                        location = item['present_at_location_ids']
+                item_names = []
+                for item in data["objects"]:
+                    if (item["type"] == "ITEM" and
+                        item['item_data']['name'] == service and
+                        item["item_data"]["product_type"] == "APPOINTMENTS_SERVICE" and
+                        (item.get("present_at_all_locations") or location_id in item.get("present_at_location_ids", []))):
                         for variation in item['item_data']['variations']:
-                            variation_id = variation['id']
-                            service_version = variation['version']
-                        return location, variation_id, service_version
-                else:
-                    print("Target item not found in Square catalog.")
-                    return None, None, None
+                                    variation_id = variation['id']
+                                    service_version = variation['version']
+                return variation_id, service_version
             else:
-                print("Request failed with status code:", response.status_code)
-                return None, None, None
-        except NameError:
-            print("Variable 'availability_check' not defined.")
-            return None, None, None
+                print("Request failed with status code:", response.status_code, response.json())
         
     def get_team_member_ids(self, token):
         url = "https://connect.squareup.com/v2/team-members/search"
@@ -210,7 +206,7 @@ class Scheduler(BaseAction[SchedulerOutput]):
                 try:
                     data = {
                         "booking": {
-                            "location_id": f"{location[0]}",
+                            "location_id": f"{location}",
                             "location_type": "BUSINESS_LOCATION",
                             "appointment_segments": [
                                 {
@@ -247,10 +243,10 @@ class Scheduler(BaseAction[SchedulerOutput]):
         return date_time_pt_str
         
     def run(self, params, token):
-        name, phone, service, date, time = params.split("|")
+        name, phone, location_id, service, date, time = params.split("|")
         customer_id = self.create_customer(name, phone.replace('-', ''), token)
         member_ids = self.get_team_member_ids(token)
-        location, variation_id, service_version,  = self.get_location_sversion_and_variation_id(service, token)
+        variation_id, service_version  = self.get_service_data(token, service, location_id)
         date_time = self.parse_booking(date + " " + time)
-        booking = self.create_booking(location, variation_id, service_version, customer_id, date_time, token, member_ids)
+        booking = self.create_booking(location_id, variation_id, service_version, customer_id, date_time, token, member_ids)
         return SchedulerOutput(response=str(booking))
