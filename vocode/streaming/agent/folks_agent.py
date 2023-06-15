@@ -63,14 +63,14 @@ class FolksActionAgent(BaseAgent[FolksActionAgentConfig]):
         for action_type in agent_config.actions:
             action = self.action_factory.create_action(action_type)
     
-    def get_locations_names(locations):
+    def get_locations_names(self, locations):
         names = []
         for i in locations:
             for k, v in i.items():
                 names.append(k)
         return names
     
-    def search_location_id(locations, key):
+    def search_location_id(self, locations, key):
         for dictionary in locations:
             if key in dictionary:
                 return dictionary[key]
