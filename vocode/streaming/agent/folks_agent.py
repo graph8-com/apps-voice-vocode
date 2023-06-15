@@ -57,16 +57,29 @@ class FolksActionAgent(BaseAgent[FolksActionAgentConfig]):
         openai.api_key = getenv("OPENAI_API_KEY")
         if not openai.api_key:
             raise ValueError("OPENAI_API_KEY must be set in environment or passed in")
-        self.services = agent_config.services
+        self.locations = agent_config.locations
         self.company = agent_config.company
         self.token = agent_config.token
         for action_type in agent_config.actions:
             action = self.action_factory.create_action(action_type)
+    
+    def get_locations_names(locations):
+        names = []
+        for i in locations:
+            for k, v in i.items():
+                names.append(k)
+        return names
+    
+    def search_location_id(locations, key):
+        for dictionary in locations:
+            if key in dictionary:
+                return dictionary[key]
+        return "ID not found"
 
     def _create_prompt(self):
         assert self.transcript is not None
         return PROMPT.format(
-            company=self.company, services=self.services, date=f"{date_iso}", transcript=self.transcript.to_string(include_timestamps=False), 
+            company=self.company, locations=self.locations, date=f"{date_iso}", transcript=self.transcript.to_string(include_timestamps=False), 
         )
 
     async def process(self, item: InterruptibleEvent[AgentInput]):
@@ -128,13 +141,26 @@ class FolksActionAgent(BaseAgent[FolksActionAgentConfig]):
     def extract_response(self, response: str):
         match = re.search(r"Response:\s*(.*)", response)
         return match.group(1).strip() if match else ""
+    
+    def add_location_id(self, extracted_params):
+            for location in self.get_locations_names(self.locations):
+                if extracted_params == location:
+                    extracted_params = self.search_location_id(self.locations, location)
+                    return extracted_params
+            return extracted_params
 
     def get_action_inputs(
         self, response: str, conversation_id: str
     ) -> List[ActionInput]:
         extracted_action = self.extract_action(response)
         extracted_parameters = self.extract_parameters(response)
-
+        if extracted_action == "get_services":
+            extracted_parameters = self.add_location_id(extracted_parameters)
+        if extracted_action == "check_availability":
+            location_name, service, date, time = extracted_parameters.split("|")
+            location_id = self.add_location_id(location_name)
+            extracted_parameters = extracted_parameters.replace(location_name, location_id)
+        
         action_inputs = []
         for action_type in self.agent_config.actions:
             if action_type.value == extracted_action:

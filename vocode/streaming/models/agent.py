@@ -107,7 +107,7 @@ class FolksActionAgentConfig(AgentConfig, type=AgentType.FOLKS_ACTION):
     model_name = "gpt-4"
     temperature = 0.0
     max_tokens = 500
-    services: str
+    locations: List[dict]
     company: str
     token: str
 

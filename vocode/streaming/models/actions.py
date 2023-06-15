@@ -7,6 +7,7 @@ class ActionType(str, Enum):
     NYLAS_SEND_EMAIL = "action_nylas_send_email"
     CHECK_AVAILABILITY = "check_availability"
     BOOK_APPOINTMENT = "book_appointment"
+    GET_SERVICES = "get_services"
 
 class ActionInput(BaseModel):
     action_type: ActionType
@@ -26,3 +27,6 @@ class AvailabilityOutput(ActionOutput):
 
 class SchedulerOutput(ActionOutput):
     action_type: ActionType = ActionType.BOOK_APPOINTMENT
+
+class ServicesOutput(ActionOutput):
+    action_type: ActionType = ActionType.GET_SERVICES
