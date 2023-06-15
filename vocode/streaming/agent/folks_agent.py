@@ -79,7 +79,7 @@ class FolksActionAgent(BaseAgent[FolksActionAgentConfig]):
     def _create_prompt(self):
         assert self.transcript is not None
         return PROMPT.format(
-            company=self.company, locations=self.locations, date=f"{date_iso}", transcript=self.transcript.to_string(include_timestamps=False), 
+            company=self.company, locations=self.get_locations_names(self.locations), date=f"{date_iso}", transcript=self.transcript.to_string(include_timestamps=False), 
         )
 
     async def process(self, item: InterruptibleEvent[AgentInput]):
