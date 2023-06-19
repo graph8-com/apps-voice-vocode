@@ -1,6 +1,6 @@
 import logging
 from typing import Generic, Optional, TypeVar
-from vocode.streaming.models.actions import ActionOutput, ActionType, AvailabilityOutput, SchedulerOutput, ServicesOutput
+from vocode.streaming.models.actions import ActionOutput, ActionType, AvailabilityOutput, SchedulerOutput, ServicesOutput, BookingsOutput, UpdateBookingOutput
 import requests
 import re
 from dateutil import parser
@@ -250,3 +250,82 @@ class Scheduler(BaseAction[SchedulerOutput]):
         date_time = self.parse_booking(date + " " + time)
         booking = self.create_booking(location_id, variation_id, service_version, customer_id, date_time, token, member_ids)
         return SchedulerOutput(response=str(booking))
+    
+
+class GetBookings(BaseAction[BookingsOutput]):
+    def get_customer_details(self, customer_id, token):
+        url = f"https://connect.squareup.com/v2/customers/{customer_id}"
+        headers = {
+            "Square-Version": "2023-06-08",
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+        
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code != 200:
+            raise Exception("Request failed with status %s" % response.status_code)
+        
+        customer = response.json().get('customer', {})
+        
+        return {
+            "given_name": customer.get('given_name', ''),
+            "phone_number": customer.get('phone_number', ''),
+        }
+
+    def get_square_bookings(self, start_at_min, start_at_max, token):
+        url = "https://connect.squareup.com/v2/bookings"
+        headers = {
+            "Square-Version": "2023-06-08",
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+        params = {
+            "start_at_min": start_at_min,
+            "start_at_max": start_at_max,
+        }
+        
+        response = requests.get(url, headers=headers, params=params)
+        
+        if response.status_code != 200:
+            return response.content
+        
+        bookings = response.json().get('bookings', [])
+        
+        booking_details = []
+        for booking in bookings:
+            customer_details = self.get_customer_details(booking['customer_id'], token)
+            booking_details.append({
+                "id": booking['id'],
+                "start_at": booking['start_at'],
+                "customer_id": booking['customer_id'],
+                "given_name": customer_details['given_name'],
+                "phone_number": customer_details['phone_number'],
+            })
+        
+        return booking_details
+    
+    def parse_time(self, datetime):
+        date_time_pt_str = None  
+        date_time_ahead_pt_str = None  
+
+        try:
+                    date_time_obj = parser.parse(datetime)
+                    pt_timezone = timezone('US/Pacific')
+                    date_time_pt = pt_timezone.localize(date_time_obj)
+                    date_time_pt_str = date_time_pt.isoformat()
+                    date_time_ahead_obj = date_time_pt + timedelta(hours=48)  # Add 48 hours for the square api call
+                    date_time_ahead_pt_str = date_time_ahead_obj.isoformat()
+        except AttributeError:
+                print("no date or time found")
+                pass
+        return date_time_pt_str, date_time_ahead_pt_str
+    
+    def run(self, params, token):
+        date, time = params.split("|")
+        first_time, time_ahead = self.parse_booking(date + " " + time)
+        return GetBookings(response=self.get_square_bookings(first_time, time_ahead, token))
+
+
+class UpdateBooking(BaseAction[BookingsOutput]):
+     pass
