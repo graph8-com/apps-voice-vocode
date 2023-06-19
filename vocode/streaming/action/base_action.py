@@ -264,7 +264,7 @@ class GetBookings(BaseAction[BookingsOutput]):
         response = requests.get(url, headers=headers)
         
         if response.status_code != 200:
-            raise Exception("Request failed with status %s" % response.status_code)
+            return response.content
         
         customer = response.json().get('customer', {})
         
@@ -323,9 +323,51 @@ class GetBookings(BaseAction[BookingsOutput]):
     
     def run(self, params, token):
         date, time = params.split("|")
-        first_time, time_ahead = self.parse_booking(date + " " + time)
+        first_time, time_ahead = self.parse_time(date + " " + time)
         return GetBookings(response=self.get_square_bookings(first_time, time_ahead, token))
 
 
 class UpdateBooking(BaseAction[BookingsOutput]):
-     pass
+    def update_booking(self, booking_id, start_at, token):
+        url = f"https://connect.squareup.com/v2/bookings/{booking_id}"
+        headers = {
+            "Square-Version": "2023-06-08",
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+        data = {
+            "booking": {
+                "start_at": start_at
+            }
+        }
+
+        response = requests.put(url, headers=headers, json=data)
+
+        if response.status_code != 200:
+            return response.content
+
+        booking = response.json().get('booking', {})
+        
+        return {
+            "id": booking.get('id', ''),
+            "status": booking.get('status', ''),
+            "created_at": booking.get('created_at', ''),
+            "updated_at": booking.get('updated_at', ''),
+            "start_at": booking.get('start_at', ''),
+        }
+    
+    def parse_booking(self, datetime):
+        date_time_pt_str = None
+        if datetime:
+                    date_time_obj = parser.parse(datetime)
+                    pt_timezone = timezone('US/Pacific')
+                    date_time_pt = pt_timezone.localize(date_time_obj)
+                    date_time_pt_str = date_time_pt.isoformat()
+        else:
+            pass
+        return date_time_pt_str
+
+    def run(self, params, token):
+        booking_id, date, time = params.split("|")
+        start_at = self.parse_booking(date + " " + time)
+        return BookingsOutput(response=self.update_booking(booking_id, start_at, token))
