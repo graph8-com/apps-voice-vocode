@@ -253,6 +253,31 @@ class Scheduler(BaseAction[SchedulerOutput]):
     
 
 class GetBookings(BaseAction[BookingsOutput]):
+    def get_service_name(service_variation_id, token):
+        url = "https://connect.squareup.com/v2/catalog/search-catalog-items"
+        headers = {
+            "Square-Version": "2023-06-08",
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+        data = {
+            "product_types": ["APPOINTMENTS_SERVICE"]
+        }
+
+        response = requests.post(url, headers=headers, json=data)
+
+        if response.status_code != 200:
+            raise Exception("Request failed with status %s" % response.status_code)
+
+        items = response.json().get('items', [])
+
+        for item in items:
+            for variation in item.get('item_data', {}).get('variations', []):
+                if variation.get('id') == service_variation_id:
+                    return item.get('item_data', {}).get('name')
+
+        return "No service name found" 
+
     def get_customer_details(self, customer_id, token):
         url = f"https://connect.squareup.com/v2/customers/{customer_id}"
         headers = {
@@ -295,12 +320,14 @@ class GetBookings(BaseAction[BookingsOutput]):
         booking_details = []
         for booking in bookings:
             customer_details = self.get_customer_details(booking['customer_id'], token)
+            service_name = self.get_service_name(booking['appointment_segments'][0]['service_variation_id'], token)
             booking_details.append({
                 "id": booking['id'],
                 "start_at": booking['start_at'],
                 "customer_id": booking['customer_id'],
                 "given_name": customer_details['given_name'],
                 "phone_number": customer_details['phone_number'],
+                "service_name": service_name,
             })
         
         return booking_details
