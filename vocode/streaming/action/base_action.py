@@ -253,7 +253,7 @@ class Scheduler(BaseAction[SchedulerOutput]):
     
 
 class GetBookings(BaseAction[BookingsOutput]):
-    def get_service_name(service_variation_id, token):
+    def get_service_name(self, service_variation_id, token):
         url = "https://connect.squareup.com/v2/catalog/search-catalog-items"
         headers = {
             "Square-Version": "2023-06-08",
