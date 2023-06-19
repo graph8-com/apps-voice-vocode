@@ -327,7 +327,7 @@ class GetBookings(BaseAction[BookingsOutput]):
         return GetBookings(response=self.get_square_bookings(first_time, time_ahead, token))
 
 
-class UpdateBooking(BaseAction[BookingsOutput]):
+class UpdateBooking(BaseAction[UpdateBookingOutput]):
     def update_booking(self, booking_id, start_at, token):
         url = f"https://connect.squareup.com/v2/bookings/{booking_id}"
         headers = {
@@ -370,4 +370,4 @@ class UpdateBooking(BaseAction[BookingsOutput]):
     def run(self, params, token):
         booking_id, date, time = params.split("|")
         start_at = self.parse_booking(date + " " + time)
-        return BookingsOutput(response=self.update_booking(booking_id, start_at, token))
+        return UpdateBookingOutput(response=self.update_booking(booking_id, start_at, token))
