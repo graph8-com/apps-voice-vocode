@@ -324,7 +324,7 @@ class GetBookings(BaseAction[BookingsOutput]):
     def run(self, params, token):
         date, time = params.split("|")
         first_time, time_ahead = self.parse_time(date + " " + time)
-        return BookingsOutput(response=self.get_square_bookings(first_time, time_ahead, token))
+        return BookingsOutput(response=str(self.get_square_bookings(first_time, time_ahead, token)))
 
 
 class UpdateBooking(BaseAction[UpdateBookingOutput]):
@@ -370,4 +370,4 @@ class UpdateBooking(BaseAction[UpdateBookingOutput]):
     def run(self, params, token):
         booking_id, date, time = params.split("|")
         start_at = self.parse_booking(date + " " + time)
-        return UpdateBookingOutput(response=self.update_booking(booking_id, start_at, token))
+        return UpdateBookingOutput(response=str(self.update_booking(booking_id, start_at, token)))
