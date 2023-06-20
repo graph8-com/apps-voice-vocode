@@ -10,6 +10,7 @@ class ActionType(str, Enum):
     GET_SERVICES = "get_services"
     GET_BOOKINGS = "get_bookings"
     UPDATE_BOOKING = "update_booking"
+    CANCEL_BOOKING = "cancel_booking"
 
 class ActionInput(BaseModel):
     action_type: ActionType
@@ -38,3 +39,6 @@ class BookingsOutput(ActionOutput):
 
 class UpdateBookingOutput(ActionOutput):
     action_type: ActionType = ActionType.UPDATE_BOOKING
+
+class CancelBookingOutput(ActionOutput):
+    action_type: ActionType = ActionType.CANCEL_BOOKING

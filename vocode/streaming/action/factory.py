@@ -1,4 +1,4 @@
-from vocode.streaming.action.base_action import BaseAction, Scheduler, GetAvailability, GetServices, GetBookings, UpdateBooking
+from vocode.streaming.action.base_action import BaseAction, Scheduler, GetAvailability, GetServices, GetBookings, UpdateBooking, CancelBooking
 from vocode.streaming.action.nylas_send_email import NylasSendEmail
 from vocode.streaming.models.actions import ActionType
 
@@ -17,5 +17,7 @@ class ActionFactory:
             return GetBookings()
         elif action_type == ActionType.UPDATE_BOOKING:
             return UpdateBooking()
+        elif action_type == ActionType.CANCEL_BOOKING:
+            return CancelBooking()
         else:
             raise Exception("Invalid action type")

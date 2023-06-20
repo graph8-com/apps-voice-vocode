@@ -1,6 +1,6 @@
 import logging
 from typing import Generic, Optional, TypeVar
-from vocode.streaming.models.actions import ActionOutput, ActionType, AvailabilityOutput, SchedulerOutput, ServicesOutput, BookingsOutput, UpdateBookingOutput
+from vocode.streaming.models.actions import ActionOutput, ActionType, AvailabilityOutput, SchedulerOutput, ServicesOutput, BookingsOutput, UpdateBookingOutput, CancelBookingOutput
 import requests
 import re
 from dateutil import parser
@@ -398,3 +398,20 @@ class UpdateBooking(BaseAction[UpdateBookingOutput]):
         booking_id, date, time = params.split("|")
         start_at = self.parse_booking(date + " " + time)
         return UpdateBookingOutput(response=str(self.update_booking(booking_id, start_at, token)))
+    
+
+class CancelBooking(BaseAction[CancelBookingOutput]):
+     def cancel_booking(self, booking_id, token):
+        url = f"https://connect.squareup.com/v2/bookings/{booking_id}/cancel"
+
+        headers = {
+            'Square-Version': '2023-06-08',
+            'Authorization': f'Bearer {token}',
+            'Content-Type': 'application/json',
+        }
+
+        response = requests.post(url, headers=headers)
+        return response.json()
+     
+     def run(self, params, token):
+          return CancelBookingOutput(response=str(self.cancel_booking(params, token)))
