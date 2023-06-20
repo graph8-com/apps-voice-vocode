@@ -61,7 +61,8 @@ Response: [Answer]
 Action:
 Action parameters:
 
-* If the caller is interested in scheduling an appointment, you must first take the get_services action, then the check_availability action and finally the book_appointment action.
+* If the caller is interested in scheduling an appointment, you must first take the get_services action and, while doing so, simply reply "Ok, just a sec." If the caller already mentioned a service, check if that service matches one of the services available and if it does, use the check_availability action immediately. If the caller hasn't mentioned any service, use the get_services action and ask the caller which one is he interested in. 
+* You can only take the book_appointment action after having used check_availability.
 * If you're taking an action, your response must be a brief message that asks the caller to wait: "Ok, one sec...", or "Alright, just a moment...", etcetera.
 * If you intended to take an action and there's no ACTION_WORKER response shown in the transcript, that means you didn't use the parameters correctly and you must try again in your next reply.
 * If either the name of the company or the locations have a "Not available" value, or the locations are "None", you must ask the caller to finish setting up their account on Folks and call back. Encourage them to connect their account to Square using the green "Connect Square" button.
