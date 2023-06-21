@@ -83,7 +83,7 @@ class Transcript(BaseModel):
     def add_bot_message(self, text: str, conversation_id: str):
         self.add_message(
             text=text,
-            sender=Sender.BOT,
+            sender=Sender.RESPONSE,
             conversation_id=conversation_id,
         )
 

@@ -103,7 +103,7 @@ class FolksActionAgent(BaseAgent[FolksActionAgentConfig]):
                         {"role": "system", "content": self._create_prompt()}]
             print(self._create_prompt())
             openai_response = await openai.ChatCompletion.acreate(
-                model="gpt-4",
+                model="gpt-4-0314",
                 messages=messages,
                 max_tokens=500,
                 temperature=0.0,
@@ -121,6 +121,7 @@ class FolksActionAgent(BaseAgent[FolksActionAgentConfig]):
                         AgentResponseMessage(message=BaseMessage(text=maybe_response))
                     )
                 verbose_response += f"{message}\n"
+            print(verbose_response)
             for action_input in self.get_action_inputs(
                 verbose_response, agent_input.conversation_id
             ):
@@ -131,15 +132,15 @@ class FolksActionAgent(BaseAgent[FolksActionAgentConfig]):
             pass
 
     def extract_action(self, response: str):
-        match = re.search(r"Action:\s*(.*)", response)
+        match = re.search(r"Action:\s*(.*)", response, re.IGNORECASE)
         return match.group(1).strip() if match else None
 
     def extract_parameters(self, response: str):
-        match = re.search(r"Action parameters:\s*(.*)", response)
+        match = re.search(r"Action parameters:\s*(.*)", response, re.IGNORECASE)
         return match.group(1).strip() if match else ""
 
     def extract_response(self, response: str):
-        match = re.search(r"Response:\s*(.*)", response)
+        match = re.search(r"Response:\s*(.*)", response, re.IGNORECASE)
         return match.group(1).strip() if match else ""
     
     def add_location_id(self, extracted_params):

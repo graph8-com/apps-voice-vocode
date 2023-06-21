@@ -8,3 +8,6 @@ credentials.json
 *.bytes
 **/call_transcripts/*.txt
 benchmark_results/
+utils/
+app.py
+logfile.txt

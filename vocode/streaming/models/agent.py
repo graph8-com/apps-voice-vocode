@@ -104,7 +104,7 @@ class ActionAgentConfig(AgentConfig, type=AgentType.ACTION):
 
 class FolksActionAgentConfig(AgentConfig, type=AgentType.FOLKS_ACTION):
     actions: List[ActionType]
-    model_name = "gpt-4"
+    model_name = "gpt-4-0314"
     temperature = 0.0
     max_tokens = 500
     locations: List[dict]
