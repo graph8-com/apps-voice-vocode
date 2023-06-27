@@ -5,6 +5,8 @@ from typing import List, Optional
 import re
 import typing
 import openai
+import copy
+import random
 
 
 from vocode import getenv
@@ -36,9 +38,12 @@ from vocode.streaming.utils.worker import InterruptibleEvent
 import datetime
 from pytz import timezone
 
-n = datetime.datetime.now(datetime.timezone.utc)
-date = n.astimezone(timezone('US/Pacific'))
-date_iso = date.isoformat()
+filler_phrases = ["One sec.",  "One moment.",  "Just a moment.",  "Just a moment please.",  "Ok, one sec.",  "Ok, just a sec.",  
+                  "Ok, one moment.",  "Ok, let me check.",  "Ok, um... one sec.",  "Ok, just a moment.",  "Ok, um... one moment.",  
+                  "Ok, one moment please.",  "Sure, one sec.",  "Sure, just a sec.",  "Sure, one moment.",  "Sure, let me check.",  
+                  "Sure, um... one sec.",  "Sure, just a moment.",  "Sure, um... one moment.",  "Sure, one moment please.",  "Alright! One sec.",  
+                  "Alright! Just a sec.",  "Alright! One moment.",  "Alright! Um... one sec.",  "Alright! Just a moment.",  
+                  "Alright! Um... one moment.",  "Alright! One moment please."]
 
 class ActionAgent(BaseAgent[ActionAgentConfig]):
     def __init__(
@@ -61,7 +66,7 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
         self.locations = agent_config.locations
         self.company = agent_config.company
         self.token = agent_config.token
-        print(self.locations)
+        self.date = ((datetime.datetime.now(datetime.timezone.utc)).astimezone(timezone('US/Pacific'))).isoformat()
 
     async def process(self, item: InterruptibleEvent[AgentInput]):
         assert self.transcript is not None
@@ -86,7 +91,7 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
                 raise ValueError("Invalid AgentInput type")
 
             messages = format_openai_chat_messages_from_transcript(
-                self.transcript, SYSTEM_MESSAGE.format(locations=self.locations, company=self.company, date=f"{date_iso}")
+                self.transcript, SYSTEM_MESSAGE.format(locations=self.locations, company=self.company, date=f"{self.date}")
             )
             openai_response = await openai.ChatCompletion.acreate(
                 model=self.agent_config.model_name,
@@ -111,6 +116,11 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
                     self.produce_interruptible_event_nonblocking(
                         AgentResponseMessage(message=BaseMessage(text=user_message))
                     )
+                elif "user_message" not in params:
+                    user_message = random.choice(filler_phrases)
+                    self.produce_interruptible_event_nonblocking(
+                        AgentResponseMessage(message=BaseMessage(text=user_message))
+                    )
                 action_input: ActionInput
                 if isinstance(action, VonagePhoneCallAction):
                     assert (
@@ -132,8 +142,9 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
                         params,
                     )
                 event = self.interruptible_event_factory.create(action_input)
+                transcript_action = copy.deepcopy(action_input); transcript_action.params.token = ""
                 self.transcript.add_action_start_log(
-                    action_input=action_input,
+                    action_input=transcript_action,
                     conversation_id=agent_input.conversation_id,
                 )
                 self.actions_queue.put_nowait(event)

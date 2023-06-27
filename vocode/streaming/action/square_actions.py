@@ -66,7 +66,7 @@ class ServicesOutput(BaseModel):
     response: str
 
 class GetServices(BaseAction[ServicesParameters, ServicesOutput]):
-    description: str = "Retrieves services offered by the company"
+    description: str = "Retrieve services offered by the company"
     action_type: str = "get_services"
     parameters_type: Type[ServicesParameters] = ServicesParameters
     response_type: Type[ServicesOutput] = ServicesOutput
@@ -100,7 +100,7 @@ class GetServices(BaseAction[ServicesParameters, ServicesOutput]):
     def _user_message_param_info(self):
         return {
             "type": "string",
-            "description": """Sure, just a sec.""",
+            "description": """Just a moment please.""",
         }
 
     async def run(
@@ -116,92 +116,113 @@ class GetServices(BaseAction[ServicesParameters, ServicesOutput]):
         )
 
 class AvailabilityParameters(BaseModel):
-    location_name: str = Field(..., description="location name if there's only one location; otherwise, selected location by the caller.")
+    location_id: str = Field(..., description="ID corresponding to the single location if there's only one location; otherwise, ID corresponding to the location name selected by the caller.")
     service: str = Field(..., description="Name of the service that matches the caller's request.")
     date: str = Field(..., description="Month and day of the month for the appointment, formatted as: June, 5th")
     time: str = Field(..., description="Desired time for the appointment, formatted as: 8 AM")
+    token: Optional[str] = Field(None, description="token for the API call.")
 
-# class GetAvailability(BaseAction[AvailabilityOutput]):
-#     def get_variation_id(self, service, token, location_id):
-#             url = "https://connect.squareup.com/v2/catalog/list"
-#             headers = {
-#                 "Square-Version": "2023-04-19",
-#                 "Authorization": f"Bearer {token}",
-#                 "Content-Type": "application/json"
-#             }
+class AvailabilityOutput(BaseModel):
+    response: str
 
-#             response = requests.get(url, headers=headers)
+class GetAvailability(BaseAction[AvailabilityParameters, AvailabilityOutput]):
+    description: str = "Consult availability for a specific service on a 24 hour range, starting from the date and time specified"
+    action_type: str = "get_availability"
+    parameters_type: Type[AvailabilityParameters] = AvailabilityParameters
+    response_type: Type[AvailabilityOutput] = AvailabilityOutput
 
-#             if response.status_code == 200:
-#                 data = response.json()
-#                 for item in data["objects"]:
-#                     if (item["type"] == "ITEM" and
-#                         item['item_data']['name'] == service and
-#                         item["item_data"]["product_type"] == "APPOINTMENTS_SERVICE" and
-#                         (item.get("present_at_all_locations") or location_id in item.get("present_at_location_ids", []))):
-#                         for variation in item['item_data']['variations']:
-#                                     variation_id = variation['id']
-#                 return variation_id
-#             else:
-#                 print("Request failed with status code:", response.status_code, response.json())
+    def get_variation_id(self, service, token, location_id):
+            url = "https://connect.squareup.com/v2/catalog/list"
+            headers = {
+                "Square-Version": "2023-04-19",
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json"
+            }
+
+            response = requests.get(url, headers=headers)
+
+            if response.status_code == 200:
+                data = response.json()
+                for item in data["objects"]:
+                    if (item["type"] == "ITEM" and
+                        item['item_data']['name'] == service and
+                        item["item_data"]["product_type"] == "APPOINTMENTS_SERVICE" and
+                        (item.get("present_at_all_locations") or location_id in item.get("present_at_location_ids", []))):
+                        for variation in item['item_data']['variations']:
+                                    variation_id = variation['id']
+                return variation_id
+            else:
+                print("Request failed with status code:", response.status_code, response.json())
         
-#     def get_availability(self, location_id, variation_id, av_first, av_ahead, token):
-#         url = "https://connect.squareup.com/v2/bookings/availability/search"
-#         headers = {
-#             "Square-Version": "2023-04-19",
-#             "Authorization": f"Bearer {token}",
-#             "Content-Type": "application/json"
-#         }
-#         data = {
-#             "query": {
-#                 "filter": {
-#                     "start_at_range": {
-#                         "end_at": f"{av_ahead}",
-#                         "start_at": f"{av_first}"
-#                     },
-#                     "location_id": f"{location_id}",
-#                     "segment_filters": [
-#                         {
-#                             "service_variation_id": f"{variation_id}"
-#                         }
-#                     ]
-#                 }
-#             }
-#         }
-#         response = requests.post(url, headers=headers, json=data)
-#         if response.status_code == 200:
-#             response_json = response.json()
-#             if 'availabilities' in response_json and response_json['availabilities']:
-#                 availability = response_json['availabilities'][:4]
-#                 return availability
-#             else:
-#                 print("No availabilities found in the response.")
-#                 return None
-#         else:
-#             print("Request failed with status code:", response.status_code, response.text)
+    def get_availability(self, location_id, variation_id, av_first, av_ahead, token):
+        url = "https://connect.squareup.com/v2/bookings/availability/search"
+        headers = {
+            "Square-Version": "2023-04-19",
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "query": {
+                "filter": {
+                    "start_at_range": {
+                        "end_at": f"{av_ahead}",
+                        "start_at": f"{av_first}"
+                    },
+                    "location_id": f"{location_id}",
+                    "segment_filters": [
+                        {
+                            "service_variation_id": f"{variation_id}"
+                        }
+                    ]
+                }
+            }
+        }
+        response = requests.post(url, headers=headers, json=data)
+        if response.status_code == 200:
+            response_json = response.json()
+            if 'availabilities' in response_json and response_json['availabilities']:
+                availability = response_json['availabilities'][:4]
+                return availability
+            else:
+                print("No availabilities found in the response.")
+                return None
+        else:
+            print("Request failed with status code:", response.status_code, response.text)
     
-#     def parse_availability(self, datetime):
-#         date_time_pt_str = None  
-#         date_time_ahead_pt_str = None  
+    def parse_availability(self, datetime):
+        date_time_pt_str = None  
+        date_time_ahead_pt_str = None  
 
-#         try:
-#                     date_time_obj = parser.parse(datetime)
-#                     pt_timezone = timezone('US/Pacific')
-#                     date_time_pt = pt_timezone.localize(date_time_obj)
-#                     date_time_pt_str = date_time_pt.isoformat()
-#                     date_time_ahead_obj = date_time_pt + timedelta(hours=24)  # Add 24 hours for the square api call
-#                     date_time_ahead_pt_str = date_time_ahead_obj.isoformat()
-#         except AttributeError:
-#                 print("no date or time found")
-#                 pass
-#         return date_time_pt_str, date_time_ahead_pt_str
+        try:
+                    date_time_obj = parser.parse(datetime)
+                    pt_timezone = timezone('US/Pacific')
+                    date_time_pt = pt_timezone.localize(date_time_obj)
+                    date_time_pt_str = date_time_pt.isoformat()
+                    date_time_ahead_obj = date_time_pt + timedelta(hours=24)  # Add 24 hours for the square api call
+                    date_time_ahead_pt_str = date_time_ahead_obj.isoformat()
+        except AttributeError:
+                print("no date or time found")
+                pass
+        return date_time_pt_str, date_time_ahead_pt_str
+    
+    def _user_message_param_info(self):
+        return {
+            "type": "string",
+            "description": """Alright. Give me a sec to consult our availability.""",
+        }
+
+    async def run(
+        self, action_input: ActionInput[AvailabilityParameters]
+    ) -> ActionOutput[AvailabilityOutput]:
         
-#     def run(self, params, token):
-#         location_id, service, date, time = params.split("|")
-#         av_first, av_ahead = self.parse_availability(date + " " + time)
-#         variation_id = self.get_variation_id(service, token, location_id)
-#         availability = self.get_availability(location_id, variation_id, av_first, av_ahead, token)
-#         return AvailabilityOutput(response=str(availability))
+        av_first, av_ahead = self.parse_availability(action_input.params.date + " " + action_input.params.time)
+        variation_id = self.get_variation_id(action_input.params.service, action_input.params.token, action_input.params.location_id)
+        availability = self.get_availability(action_input.params.location_id, variation_id, av_first, av_ahead, action_input.params.token)
+
+        return ActionOutput(
+            action_type=action_input.action_type,
+            response=AvailabilityOutput(response=str(availability)),
+        )
     
 
 # class Scheduler(BaseAction[SchedulerOutput]):
