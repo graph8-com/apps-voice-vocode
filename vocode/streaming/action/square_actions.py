@@ -58,7 +58,7 @@ class NylasSendEmail(BaseAction[NylasSendEmailParameters, NylasSendEmailResponse
 
 
 class ServicesParameters(BaseModel):
-    location_name: str = Field(..., description="location name if there's only one location; otherwise, selected location by the caller.")
+    location_id: str = Field(..., description="ID corresponding to the single location if there's only one location; otherwise, ID corresponding to the location name selected by the caller.")
     token: Optional[str] = Field(None, description="token for the API call.")
 
 
@@ -71,7 +71,7 @@ class GetServices(BaseAction[ServicesParameters, ServicesOutput]):
     parameters_type: Type[ServicesParameters] = ServicesParameters
     response_type: Type[ServicesOutput] = ServicesOutput
 
-    async def get_services(self, token, location_id):
+    def get_services(self, token, location_id):
             url = "https://connect.squareup.com/v2/catalog/list"
             headers = {
                 "Square-Version": "2023-04-19",
@@ -106,10 +106,13 @@ class GetServices(BaseAction[ServicesParameters, ServicesOutput]):
     async def run(
         self, action_input: ActionInput[ServicesParameters]
     ) -> ActionOutput[ServicesOutput]:
+        
+        response = self.get_services(action_input.params.token, action_input.params.location_id)
+        print(response)
 
         return ActionOutput(
             action_type=action_input.action_type,
-            response=ServicesOutput(response=str(self.get_services(action_input.params.token, action_input.params.location_name))),
+            response=ServicesOutput(response=str(response)),
         )
 
 class AvailabilityParameters(BaseModel):

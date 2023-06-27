@@ -61,6 +61,7 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
         self.locations = agent_config.locations
         self.company = agent_config.company
         self.token = agent_config.token
+        print(self.locations)
 
     async def process(self, item: InterruptibleEvent[AgentInput]):
         assert self.transcript is not None
