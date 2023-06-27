@@ -7,11 +7,11 @@ from vocode.streaming.models.message import BaseMessage
 from .model import TypedModel, BaseModel
 
 FILLER_AUDIO_DEFAULT_SILENCE_THRESHOLD_SECONDS = 0.5
-LLM_AGENT_DEFAULT_TEMPERATURE = 1.0
-LLM_AGENT_DEFAULT_MAX_TOKENS = 256
+LLM_AGENT_DEFAULT_TEMPERATURE = 0.0
+LLM_AGENT_DEFAULT_MAX_TOKENS = 500
 LLM_AGENT_DEFAULT_MODEL_NAME = "text-curie-001"
 CHAT_GPT_AGENT_DEFAULT_MODEL_NAME = "gpt-3.5-turbo-0613"
-ACTION_AGENT_DEFAULT_MODEL_NAME = "gpt-3.5-turbo-0613"
+ACTION_AGENT_DEFAULT_MODEL_NAME = "gpt-4-0314"
 CHAT_ANTHROPIC_DEFAULT_MODEL_NAME = "claude-v1"
 CHAT_VERTEX_AI_DEFAULT_MODEL_NAME = "chat-bison@001"
 AZURE_OPENAI_DEFAULT_API_TYPE = "azure"
@@ -105,11 +105,14 @@ class ChatVertexAIAgentConfig(AgentConfig, type=AgentType.CHAT_VERTEX_AI.value):
 
 
 class ActionAgentConfig(AgentConfig, type=AgentType.ACTION.value):
-    prompt_preamble: str
+    prompt_preamble: Optional[str]
     actions: List[str]
     model_name: str = ACTION_AGENT_DEFAULT_MODEL_NAME
     temperature: float = LLM_AGENT_DEFAULT_TEMPERATURE
     max_tokens: int = LLM_AGENT_DEFAULT_MAX_TOKENS
+    locations: List[dict]
+    company: str
+    token: str
 
 
 class InformationRetrievalAgentConfig(

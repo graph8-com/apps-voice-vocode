@@ -23,7 +23,7 @@ from vocode.streaming.agent.base_agent import (
     BaseAgent,
     TranscriptionAgentInput,
 )
-from vocode.streaming.agent.prompts.action_prompt import ACTION_PROMPT_DEFAULT
+from vocode.streaming.agent.prompts.action_prompt import ACTION_PROMPT_DEFAULT, SYSTEM_MESSAGE
 from vocode.streaming.agent.utils import (
     format_openai_chat_messages_from_transcript,
     stream_openai_response_async,
@@ -33,6 +33,12 @@ from vocode.streaming.models.agent import ActionAgentConfig
 from vocode.streaming.models.message import BaseMessage
 from vocode.streaming.utils.worker import InterruptibleEvent
 
+import datetime
+from pytz import timezone
+
+n = datetime.datetime.now(datetime.timezone.utc)
+date = n.astimezone(timezone('US/Pacific'))
+date_iso = date.isoformat()
 
 class ActionAgent(BaseAgent[ActionAgentConfig]):
     def __init__(
@@ -52,6 +58,9 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
         if not openai.api_key:
             raise ValueError("OPENAI_API_KEY must be set in environment or passed in")
         self.functions = self.get_functions()
+        self.locations = agent_config.locations
+        self.company = agent_config.company
+        self.token = agent_config.token
 
     async def process(self, item: InterruptibleEvent[AgentInput]):
         assert self.transcript is not None
@@ -76,7 +85,7 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
                 raise ValueError("Invalid AgentInput type")
 
             messages = format_openai_chat_messages_from_transcript(
-                self.transcript, self.agent_config.prompt_preamble
+                self.transcript, SYSTEM_MESSAGE.format(locations=self.locations, company=self.company, date=f"{date_iso}")
             )
             openai_response = await openai.ChatCompletion.acreate(
                 model=self.agent_config.model_name,
@@ -95,6 +104,7 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
             elif message.function_call:
                 action = self.action_factory.create_action(message.function_call.name)
                 params = json.loads(message.function_call.arguments)
+                params["token"] = self.token
                 if "user_message" in params:
                     user_message = params["user_message"]
                     self.produce_interruptible_event_nonblocking(
