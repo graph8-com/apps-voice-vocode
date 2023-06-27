@@ -218,6 +218,7 @@ class GetAvailability(BaseAction[AvailabilityParameters, AvailabilityOutput]):
         av_first, av_ahead = self.parse_availability(action_input.params.date + " " + action_input.params.time)
         variation_id = self.get_variation_id(action_input.params.service, action_input.params.token, action_input.params.location_id)
         availability = self.get_availability(action_input.params.location_id, variation_id, av_first, av_ahead, action_input.params.token)
+        print(availability)
 
         return ActionOutput(
             action_type=action_input.action_type,

@@ -91,7 +91,7 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
                 raise ValueError("Invalid AgentInput type")
 
             messages = format_openai_chat_messages_from_transcript(
-                self.transcript, SYSTEM_MESSAGE.format(locations=self.locations, company=self.company, date=f"{self.date}")
+                self.transcript, SYSTEM_MESSAGE.format(locations=self.locations[-1], company=self.company, date=f"{self.date}")
             )
             openai_response = await openai.ChatCompletion.acreate(
                 model=self.agent_config.model_name,
