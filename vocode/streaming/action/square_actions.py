@@ -11,52 +11,6 @@ from datetime import timedelta
 from pytz import timezone
 import json
 
-
-class NylasSendEmailParameters(BaseModel):
-    recipient_email: str = Field(..., description="The email address of the recipient.")
-    body: str = Field(..., description="The body of the email.")
-    subject: Optional[str] = Field(None, description="The subject of the email.")
-
-
-class NylasSendEmailResponse(BaseModel):
-    success: bool
-
-
-class NylasSendEmail(BaseAction[NylasSendEmailParameters, NylasSendEmailResponse]):
-    description: str = "Sends an email using Nylas API."
-    action_type: str = ActionType.NYLAS_SEND_EMAIL.value
-    parameters_type: Type[NylasSendEmailParameters] = NylasSendEmailParameters
-    response_type: Type[NylasSendEmailResponse] = NylasSendEmailResponse
-
-    async def run(
-        self, action_input: ActionInput[NylasSendEmailParameters]
-    ) -> ActionOutput[NylasSendEmailResponse]:
-        from nylas import APIClient
-
-        # Initialize the Nylas client
-        nylas = APIClient(
-            client_id=os.getenv("NYLAS_CLIENT_ID"),
-            client_secret=os.getenv("NYLAS_CLIENT_SECRET"),
-            access_token=os.getenv("NYLAS_ACCESS_TOKEN"),
-        )
-
-        # Create the email draft
-        draft = nylas.drafts.create()
-        draft.body = action_input.params.body
-
-        email_subject = action_input.params.subject
-        draft.subject = email_subject if email_subject else "Email from Vocode"
-        draft.to = [{"email": action_input.params.recipient_email.strip()}]
-
-        # Send the email
-        draft.send()
-
-        return ActionOutput(
-            action_type=action_input.action_type,
-            response=NylasSendEmailResponse(success=True),
-        )
-
-
 class ServicesParameters(BaseModel):
     location_id: str = Field(..., description="ID corresponding to the single location if there's only one location; otherwise, ID corresponding to the location name selected by the caller.")
     token: Optional[str] = Field(None, description="token for the API call.")
@@ -228,8 +182,8 @@ class SchedulerOutput(BaseModel):
 class Scheduler(BaseAction[SchedulerParameters, SchedulerOutput]):
     description: str = "Book an appointment for a specific service on a given date and time"
     action_type: str = "book_appointment"
-    parameters_type: Type[AvailabilityParameters] = AvailabilityParameters
-    response_type: Type[AvailabilityOutput] = AvailabilityOutput
+    parameters_type: Type[SchedulerParameters] = SchedulerParameters
+    response_type: Type[SchedulerOutput] = SchedulerOutput
 
     def create_customer(self, name, phone, token):
         try:
@@ -344,8 +298,8 @@ class Scheduler(BaseAction[SchedulerParameters, SchedulerOutput]):
         return date_time_pt_str
 
     async def run(
-        self, action_input: ActionInput[AvailabilityParameters]
-    ) -> ActionOutput[AvailabilityOutput]:
+        self, action_input: ActionInput[SchedulerParameters]
+    ) -> ActionOutput[SchedulerOutput]:
         
         customer_id = self.create_customer(action_input.params.name, action_input.params.phone.replace('-', ''), action_input.params.token)
         member_ids = self.get_team_member_ids(action_input.params.token)
