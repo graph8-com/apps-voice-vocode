@@ -66,7 +66,7 @@ class GetServices(BaseAction[ServicesParameters, ServicesOutput]):
 class AvailabilityParameters(BaseModel):
     location_id: str = Field(..., description="ID corresponding to the single location if there's only one location; otherwise, ID corresponding to the location name selected by the caller.")
     service: str = Field(..., description="Name of the service that matches the caller's request.")
-    date: str = Field(..., description="Month and day of the month for the appointment, formatted as: June, 5th")
+    date: str = Field(..., description="Desired month and day of the month for the appointment, formatted as: June, 5th")
     time: str = Field(..., description="Desired time for the appointment, formatted as: 8 AM")
     token: Optional[str] = Field(None, description="token for the API call.")
 
@@ -168,8 +168,8 @@ class GetAvailability(BaseAction[AvailabilityParameters, AvailabilityOutput]):
         )
     
 class SchedulerParameters(BaseModel):
-    name: str = Field(..., description="Name of the person that books the appointment")
-    phone: str = Field(..., description="Phone number of the person that books the appointment")
+    name: str = Field(..., description="Name of the person that wants to book the appointment")
+    phone: str = Field(..., description="Phone number of the person that wants to book the appointment")
     location_id: str = Field(..., description="ID corresponding to the single location if there's only one location; otherwise, ID corresponding to the location name selected by the caller.")
     service: str = Field(..., description="Name of the service that matches the caller's request.")
     date: str = Field(..., description="Month and day of the month for the appointment, formatted as: June, 5th")
@@ -308,173 +308,233 @@ class Scheduler(BaseAction[SchedulerParameters, SchedulerOutput]):
         booking = self.create_booking(action_input.params.location_id, variation_id, service_version, customer_id, date_time, action_input.params.token, member_ids)
         print(booking)
 
-
         return ActionOutput(
             action_type=action_input.action_type,
             response=SchedulerOutput(response=str(booking)),
         )
     
 
-# class GetBookings(BaseAction[BookingsOutput]):
-#     def get_service_name(self, service_variation_id, token):
-#         url = "https://connect.squareup.com/v2/catalog/search-catalog-items"
-#         headers = {
-#             "Square-Version": "2023-06-08",
-#             "Authorization": f"Bearer {token}",
-#             "Content-Type": "application/json",
-#         }
-#         data = {
-#             "product_types": ["APPOINTMENTS_SERVICE"]
-#         }
+class BookingsParameters(BaseModel):
+    date: str = Field(..., description="Month and day of the month of the booking to look for, formatted as: June, 5th")
+    time: str = Field(..., description="Time of the booking to look for, formatted as: 8 AM")
+    token: Optional[str] = Field(None, description="token for the API call.")
 
-#         response = requests.post(url, headers=headers, json=data)
+class BookingsOutput(BaseModel):
+    response: str
 
-#         if response.status_code != 200:
-#             raise Exception("Request failed with status %s" % response.status_code)
+class GetBookings(BaseAction[BookingsParameters, BookingsOutput]):
+    description: str = "Consult our current bookings on a 24 hour range, starting from the date and time specified"
+    action_type: str = "get_bookings"
+    parameters_type: Type[BookingsParameters] = BookingsParameters
+    response_type: Type[BookingsOutput] = BookingsOutput
 
-#         items = response.json().get('items', [])
+    def get_service_name(self, service_variation_id, token):
+        url = "https://connect.squareup.com/v2/catalog/search-catalog-items"
+        headers = {
+            "Square-Version": "2023-06-08",
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+        data = {
+            "product_types": ["APPOINTMENTS_SERVICE"]
+        }
 
-#         for item in items:
-#             for variation in item.get('item_data', {}).get('variations', []):
-#                 if variation.get('id') == service_variation_id:
-#                     return item.get('item_data', {}).get('name')
+        response = requests.post(url, headers=headers, json=data)
 
-#         return "No service name found" 
+        if response.status_code != 200:
+            raise Exception("Request failed with status %s" % response.status_code)
 
-#     def get_customer_details(self, customer_id, token):
-#         url = f"https://connect.squareup.com/v2/customers/{customer_id}"
-#         headers = {
-#             "Square-Version": "2023-06-08",
-#             "Authorization": f"Bearer {token}",
-#             "Content-Type": "application/json",
-#         }
-        
-#         response = requests.get(url, headers=headers)
-        
-#         if response.status_code != 200:
-#             return response.content
-        
-#         customer = response.json().get('customer', {})
-        
-#         return {
-#             "given_name": customer.get('given_name', ''),
-#             "phone_number": customer.get('phone_number', ''),
-#         }
+        items = response.json().get('items', [])
 
-#     def get_square_bookings(self, start_at_min, start_at_max, token):
-#         url = "https://connect.squareup.com/v2/bookings"
-#         headers = {
-#             "Square-Version": "2023-06-08",
-#             "Authorization": f"Bearer {token}",
-#             "Content-Type": "application/json",
-#         }
-#         params = {
-#             "start_at_min": start_at_min,
-#             "start_at_max": start_at_max,
-#         }
+        for item in items:
+            for variation in item.get('item_data', {}).get('variations', []):
+                if variation.get('id') == service_variation_id:
+                    return item.get('item_data', {}).get('name')
+
+        return "No service name found" 
+
+    def get_customer_details(self, customer_id, token):
+        url = f"https://connect.squareup.com/v2/customers/{customer_id}"
+        headers = {
+            "Square-Version": "2023-06-08",
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
         
-#         response = requests.get(url, headers=headers, params=params)
+        response = requests.get(url, headers=headers)
         
-#         if response.status_code != 200:
-#             return response.content
+        if response.status_code != 200:
+            return response.content
         
-#         bookings = response.json().get('bookings', [])
+        customer = response.json().get('customer', {})
         
-#         booking_details = []
-#         for booking in bookings:
-#             customer_details = self.get_customer_details(booking['customer_id'], token)
-#             service_name = self.get_service_name(booking['appointment_segments'][0]['service_variation_id'], token)
-#             booking_details.append({
-#                 "id": booking['id'],
-#                 "start_at": booking['start_at'],
-#                 "customer_id": booking['customer_id'],
-#                 "given_name": customer_details['given_name'],
-#                 "phone_number": customer_details['phone_number'],
-#                 "service_name": service_name,
-#             })
+        return {
+            "given_name": customer.get('given_name', ''),
+            "phone_number": customer.get('phone_number', ''),
+        }
+
+    def get_square_bookings(self, start_at_min, start_at_max, token):
+        url = "https://connect.squareup.com/v2/bookings"
+        headers = {
+            "Square-Version": "2023-06-08",
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+        params = {
+            "start_at_min": start_at_min,
+            "start_at_max": start_at_max,
+        }
         
-#         return booking_details
+        response = requests.get(url, headers=headers, params=params)
+        
+        if response.status_code != 200:
+            return response.content
+        
+        bookings = response.json().get('bookings', [])
+        
+        booking_details = []
+        for booking in bookings:
+            customer_details = self.get_customer_details(booking['customer_id'], token)
+            service_name = self.get_service_name(booking['appointment_segments'][0]['service_variation_id'], token)
+            booking_details.append({
+                "id": booking['id'],
+                "start_at": booking['start_at'],
+                "customer_id": booking['customer_id'],
+                "given_name": customer_details['given_name'],
+                "phone_number": customer_details['phone_number'],
+                "service_name": service_name,
+            })
+        
+        return booking_details
     
-#     def parse_time(self, datetime):
-#         date_time_pt_str = None  
-#         date_time_ahead_pt_str = None  
+    def parse_time(self, datetime):
+        date_time_pt_str = None  
+        date_time_ahead_pt_str = None  
 
-#         try:
-#                     date_time_obj = parser.parse(datetime)
-#                     pt_timezone = timezone('US/Pacific')
-#                     date_time_pt = pt_timezone.localize(date_time_obj)
-#                     date_time_pt_str = date_time_pt.isoformat()
-#                     date_time_ahead_obj = date_time_pt + timedelta(hours=48)  # Add 48 hours for the square api call
-#                     date_time_ahead_pt_str = date_time_ahead_obj.isoformat()
-#         except AttributeError:
-#                 print("no date or time found")
-#                 pass
-#         return date_time_pt_str, date_time_ahead_pt_str
+        try:
+                    date_time_obj = parser.parse(datetime)
+                    pt_timezone = timezone('US/Pacific')
+                    date_time_pt = pt_timezone.localize(date_time_obj)
+                    date_time_pt_str = date_time_pt.isoformat()
+                    date_time_ahead_obj = date_time_pt + timedelta(hours=48)  # Add 48 hours for the square api call
+                    date_time_ahead_pt_str = date_time_ahead_obj.isoformat()
+        except AttributeError:
+                date_time_pt_str, date_time_ahead_pt_str =  None, None
+                return date_time_pt_str, date_time_ahead_pt_str
+        return date_time_pt_str, date_time_ahead_pt_str
     
-#     def run(self, params, token):
-#         date, time = params.split("|")
-#         first_time, time_ahead = self.parse_time(date + " " + time)
-#         return BookingsOutput(response=str(self.get_square_bookings(first_time, time_ahead, token)))
-
-
-# class UpdateBooking(BaseAction[UpdateBookingOutput]):
-#     def update_booking(self, booking_id, start_at, token):
-#         url = f"https://connect.squareup.com/v2/bookings/{booking_id}"
-#         headers = {
-#             "Square-Version": "2023-06-08",
-#             "Authorization": f"Bearer {token}",
-#             "Content-Type": "application/json",
-#         }
-#         data = {
-#             "booking": {
-#                 "start_at": start_at
-#             }
-#         }
-
-#         response = requests.put(url, headers=headers, json=data)
-
-#         if response.status_code != 200:
-#             return response.content
-
-#         booking = response.json().get('booking', {})
+    async def run(
+        self, action_input: ActionInput[BookingsParameters]
+    ) -> ActionOutput[BookingsOutput]:
         
-#         return {
-#             "id": booking.get('id', ''),
-#             "status": booking.get('status', ''),
-#             "created_at": booking.get('created_at', ''),
-#             "updated_at": booking.get('updated_at', ''),
-#             "start_at": booking.get('start_at', ''),
-#         }
+        first_time, time_ahead = self.parse_time(action_input.params.date + " " + action_input.params.time)
+        bookings = self.get_square_bookings(first_time, time_ahead, action_input.params.token)
+        print(bookings)
+
+        return ActionOutput(
+            action_type=action_input.action_type,
+            response=BookingsOutput(response=str(bookings)),
+        )
+
+class UpdateBookingParameters(BaseModel):
+    date: str = Field(..., description="Month and day of the month for the new booking, formatted as: June, 5th")
+    time: str = Field(..., description="Time for the new booking, formatted as: 8 AM")
+    token: Optional[str] = Field(None, description="token for the API call.")
+
+class UpdateBookingOutput(BaseModel):
+    response: str
+
+class UpdateBooking(BaseAction[UpdateBookingParameters, UpdateBookingOutput]):
+    description: str = "Update booking to a new date and time"
+    action_type: str = "update_booking"
+    parameters_type: Type[UpdateBookingParameters] = UpdateBookingParameters
+    response_type: Type[UpdateBookingOutput] = UpdateBookingOutput
+
+    def update_booking(self, booking_id, start_at, token):
+        url = f"https://connect.squareup.com/v2/bookings/{booking_id}"
+        headers = {
+            "Square-Version": "2023-06-08",
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+        data = {
+            "booking": {
+                "start_at": start_at
+            }
+        }
+
+        response = requests.put(url, headers=headers, json=data)
+
+        if response.status_code != 200:
+            return response.content
+
+        booking = response.json().get('booking', {})
+        
+        return {
+            "id": booking.get('id', ''),
+            "status": booking.get('status', ''),
+            "created_at": booking.get('created_at', ''),
+            "updated_at": booking.get('updated_at', ''),
+            "start_at": booking.get('start_at', ''),
+        }
     
-#     def parse_booking(self, datetime):
-#         date_time_pt_str = None
-#         if datetime:
-#                     date_time_obj = parser.parse(datetime)
-#                     pt_timezone = timezone('US/Pacific')
-#                     date_time_pt = pt_timezone.localize(date_time_obj)
-#                     date_time_pt_str = date_time_pt.isoformat()
-#         else:
-#             pass
-#         return date_time_pt_str
-
-#     def run(self, params, token):
-#         booking_id, date, time = params.split("|")
-#         start_at = self.parse_booking(date + " " + time)
-#         return UpdateBookingOutput(response=str(self.update_booking(booking_id, start_at, token)))
+    def parse_booking(self, datetime):
+        date_time_pt_str = None
+        if datetime:
+                    date_time_obj = parser.parse(datetime)
+                    pt_timezone = timezone('US/Pacific')
+                    date_time_pt = pt_timezone.localize(date_time_obj)
+                    date_time_pt_str = date_time_pt.isoformat()
+        else:
+            pass
+        return date_time_pt_str
     
+    async def run(
+        self, action_input: ActionInput[UpdateBookingParameters]
+    ) -> ActionOutput[UpdateBookingOutput]:
+        
+        start_at = self.parse_booking(action_input.params.date + " " + action_input.params.time)
+        new_booking = self.update_booking(action_input.params.booking_id, start_at, action_input.params.token)
+        print(new_booking)
 
-# class CancelBooking(BaseAction[CancelBookingOutput]):
-#      def cancel_booking(self, booking_id, token):
-#         url = f"https://connect.squareup.com/v2/bookings/{booking_id}/cancel"
+        return ActionOutput(
+            action_type=action_input.action_type,
+            response=UpdateBookingOutput(response=str(new_booking)),
+        )
+    
+class CancelBookingParameters(BaseModel):
+    booking_id: str = Field(..., description="ID of the appointment to cancel")
+    token: Optional[str] = Field(None, description="token for the API call.")
 
-#         headers = {
-#             'Square-Version': '2023-06-08',
-#             'Authorization': f'Bearer {token}',
-#             'Content-Type': 'application/json',
-#         }
+class CancelBookingOutput(BaseModel):
+    response: str
 
-#         response = requests.post(url, headers=headers)
-#         return response.json()
+class CancelBooking(BaseAction[CancelBookingParameters, CancelBookingOutput]):
+    description: str = "Cancel a specific appointment"
+    action_type: str = "cancel_booking"
+    parameters_type: Type[CancelBookingParameters] = CancelBookingParameters
+    response_type: Type[CancelBookingOutput] = CancelBookingOutput
+
+    def cancel_booking(self, booking_id, token):
+        url = f"https://connect.squareup.com/v2/bookings/{booking_id}/cancel"
+
+        headers = {
+            'Square-Version': '2023-06-08',
+            'Authorization': f'Bearer {token}',
+            'Content-Type': 'application/json',
+        }
+
+        response = requests.post(url, headers=headers)
+        return response.json()
      
-#      def run(self, params, token):
-#           return CancelBookingOutput(response=str(self.cancel_booking(params, token)))
+    async def run(
+        self, action_input: ActionInput[CancelBookingParameters]
+    ) -> ActionOutput[CancelBookingOutput]:
+        
+        canceled = self.cancel_booking(action_input.params.booking_id, action_input.params.token)
+        print(canceled)
+
+        return ActionOutput(
+            action_type=action_input.action_type,
+            response=CancelBookingOutput(response=str(canceled)),
+        )
