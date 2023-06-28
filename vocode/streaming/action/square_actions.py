@@ -20,7 +20,7 @@ class ServicesOutput(BaseModel):
     response: str
 
 class GetServices(BaseAction[ServicesParameters, ServicesOutput]):
-    description: str = "Retrieve services offered by the company"
+    description: str = "Retrieve services offered by the company on a given location"
     action_type: str = "get_services"
     parameters_type: Type[ServicesParameters] = ServicesParameters
     response_type: Type[ServicesOutput] = ServicesOutput
@@ -74,7 +74,7 @@ class AvailabilityOutput(BaseModel):
     response: str
 
 class GetAvailability(BaseAction[AvailabilityParameters, AvailabilityOutput]):
-    description: str = "Consult availability for a specific service on a 24 hour range, starting from the date and time specified"
+    description: str = "Consult availability for a specific service on a given location, on a 24 hour range, starting from the date and time specified"
     action_type: str = "get_availability"
     parameters_type: Type[AvailabilityParameters] = AvailabilityParameters
     response_type: Type[AvailabilityOutput] = AvailabilityOutput
@@ -180,7 +180,7 @@ class SchedulerOutput(BaseModel):
     response: str
 
 class Scheduler(BaseAction[SchedulerParameters, SchedulerOutput]):
-    description: str = "Book an appointment for a specific service on a given date and time"
+    description: str = "Use a caller's name and phone number to book an appointment for a specific service on a given location, date and time"
     action_type: str = "book_appointment"
     parameters_type: Type[SchedulerParameters] = SchedulerParameters
     response_type: Type[SchedulerOutput] = SchedulerOutput
