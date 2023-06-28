@@ -168,8 +168,8 @@ class GetAvailability(BaseAction[AvailabilityParameters, AvailabilityOutput]):
         )
     
 class SchedulerParameters(BaseModel):
-    name: str = Field(..., description="Name of the person that wants to book the appointment")
-    phone: str = Field(..., description="Phone number of the person that wants to book the appointment")
+    name: str = Field(..., description="Name of the caller")
+    phone: str = Field(..., description="Phone number of the caller")
     location_id: str = Field(..., description="ID corresponding to the single location if there's only one location; otherwise, ID corresponding to the location name selected by the caller.")
     service: str = Field(..., description="Name of the service that matches the caller's request.")
     date: str = Field(..., description="Month and day of the month for the appointment, formatted as: June, 5th")

@@ -1,6 +1,5 @@
 import queue
 from typing import Optional
-import sounddevice as sd
 import numpy as np
 
 from .base_output_device import BaseOutputDevice
@@ -23,6 +22,7 @@ class SpeakerOutput(BaseOutputDevice):
         )
         super().__init__(sampling_rate, audio_encoding)
         self.blocksize = blocksize or self.sampling_rate
+        import sounddevice as sd
         self.stream = sd.OutputStream(
             channels=1,
             samplerate=self.sampling_rate,
@@ -57,4 +57,4 @@ class SpeakerOutput(BaseOutputDevice):
         cls,
         **kwargs,
     ):
-        return cls(sd.query_devices(kind="output"), **kwargs)
+        return
