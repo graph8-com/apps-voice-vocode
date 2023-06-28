@@ -437,6 +437,7 @@ class GetBookings(BaseAction[BookingsParameters, BookingsOutput]):
         )
 
 class UpdateBookingParameters(BaseModel):
+    booking_id: str = Field(..., description="ID of the appointment to cancel")
     date: str = Field(..., description="Month and day of the month for the new booking, formatted as: June, 5th")
     time: str = Field(..., description="Time for the new booking, formatted as: 8 AM")
     token: Optional[str] = Field(None, description="token for the API call.")
