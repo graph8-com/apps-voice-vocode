@@ -79,6 +79,7 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
                     conversation_id=agent_input.conversation_id,
                 )
             elif isinstance(agent_input, ActionResultAgentInput):
+                self.logger.debug(f"Action output: {agent_input.action_output}")
                 self.transcript.add_action_finish_log(
                     action_output=agent_input.action_output,
                     conversation_id=agent_input.conversation_id,
@@ -143,6 +144,7 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
                     )
                 event = self.interruptible_event_factory.create(action_input)
                 transcript_action = copy.deepcopy(action_input); transcript_action.params.token = ""
+                self.logger.debug(f"Action input parameters: {transcript_action.params}")
                 self.transcript.add_action_start_log(
                     action_input=transcript_action,
                     conversation_id=agent_input.conversation_id,

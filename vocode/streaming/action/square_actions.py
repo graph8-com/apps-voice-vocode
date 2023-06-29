@@ -56,7 +56,6 @@ class GetServices(BaseAction[ServicesParameters, ServicesOutput]):
     ) -> ActionOutput[ServicesOutput]:
         
         response = self.get_services(action_input.params.token, action_input.params.location_id)
-        print(response)
 
         return ActionOutput(
             action_type=action_input.action_type,
@@ -160,7 +159,6 @@ class GetAvailability(BaseAction[AvailabilityParameters, AvailabilityOutput]):
         av_first, av_ahead = self.parse_availability(action_input.params.date + " " + action_input.params.time)
         variation_id = self.get_variation_id(action_input.params.service, action_input.params.token, action_input.params.location_id)
         availability = self.get_availability(action_input.params.location_id, variation_id, av_first, av_ahead, action_input.params.token)
-        print(availability)
 
         return ActionOutput(
             action_type=action_input.action_type,
@@ -306,7 +304,6 @@ class Scheduler(BaseAction[SchedulerParameters, SchedulerOutput]):
         variation_id, service_version  = self.get_service_data(action_input.params.token, action_input.params.service, action_input.params.location_id)
         date_time = self.parse_booking(action_input.params.date + " " + action_input.params.time)
         booking = self.create_booking(action_input.params.location_id, variation_id, service_version, customer_id, date_time, action_input.params.token, member_ids)
-        print(booking)
 
         return ActionOutput(
             action_type=action_input.action_type,
@@ -429,7 +426,6 @@ class GetBookings(BaseAction[BookingsParameters, BookingsOutput]):
         
         first_time, time_ahead = self.parse_time(action_input.params.date + " " + action_input.params.time)
         bookings = self.get_square_bookings(first_time, time_ahead, action_input.params.token)
-        print(bookings)
 
         return ActionOutput(
             action_type=action_input.action_type,
@@ -496,7 +492,6 @@ class UpdateBooking(BaseAction[UpdateBookingParameters, UpdateBookingOutput]):
         
         start_at = self.parse_booking(action_input.params.date + " " + action_input.params.time)
         new_booking = self.update_booking(action_input.params.booking_id, start_at, action_input.params.token)
-        print(new_booking)
 
         return ActionOutput(
             action_type=action_input.action_type,
@@ -533,7 +528,6 @@ class CancelBooking(BaseAction[CancelBookingParameters, CancelBookingOutput]):
     ) -> ActionOutput[CancelBookingOutput]:
         
         canceled = self.cancel_booking(action_input.params.booking_id, action_input.params.token)
-        print(canceled)
 
         return ActionOutput(
             action_type=action_input.action_type,
