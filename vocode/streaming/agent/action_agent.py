@@ -94,7 +94,6 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
             messages = format_openai_chat_messages_from_transcript(
                 self.transcript, SYSTEM_MESSAGE.format(locations=self.locations, company=self.company, date=f"{self.date}")
             )
-            self.logger.debug(f"PROMPT: {messages}")
             openai_response = await openai.ChatCompletion.acreate(
                 model=self.agent_config.model_name,
                 messages=messages,
