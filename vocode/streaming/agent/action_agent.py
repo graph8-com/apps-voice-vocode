@@ -7,7 +7,8 @@ import typing
 import openai
 import copy
 import random
-
+import os
+import psycopg2
 
 from vocode import getenv
 from vocode.streaming.action.factory import ActionFactory
@@ -45,6 +46,31 @@ filler_phrases = ["One sec.",  "One moment.",  "Just a moment.",  "Just a moment
                   "Alright! Just a sec.",  "Alright! One moment.",  "Alright! Um... one sec.",  "Alright! Just a moment.",  
                   "Alright! Um... one moment.",  "Alright! One moment please."]
 
+def fetch_availabilities(id):
+    url = os.getenv('POSTGRES_URL')
+
+    conn = psycopg2.connect(url)
+    cursor = conn.cursor()
+    try:
+        query = f"""
+            SELECT b.id, COALESCE(b.description, 'Not available')
+            FROM public.businesses b WHERE b.id = '{id}'
+        """
+
+        cursor.execute(query)
+
+        rows = cursor.fetchall()
+
+        for row in rows:
+            try:
+                id = row[0]
+                availabilities = row[1] if row[1] != "" else "Not available"
+            except Exception as e:
+                return e
+    except Exception as e:
+        return e
+    return availabilities
+
 class ActionAgent(BaseAgent[ActionAgentConfig]):
     def __init__(
         self,
@@ -66,6 +92,7 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
         self.locations = agent_config.locations
         self.company = agent_config.company
         self.token = agent_config.token
+        self.availabilities = fetch_availabilities(agent_config.id)
         self.date = ((datetime.datetime.now(datetime.timezone.utc)).astimezone(timezone('US/Pacific'))).isoformat()
 
     async def process(self, item: InterruptibleEvent[AgentInput]):
@@ -92,8 +119,9 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
                 raise ValueError("Invalid AgentInput type")
 
             messages = format_openai_chat_messages_from_transcript(
-                self.transcript, SYSTEM_MESSAGE.format(locations=self.locations, company=self.company, date=f"{self.date}")
+                self.transcript, SYSTEM_MESSAGE.format(locations=self.locations, company=self.company, date=f"{self.date}", availabilities=str(self.availabilities))
             )
+            #self.logger.debug(f"PROMPT\n{messages}")
             openai_response = await openai.ChatCompletion.acreate(
                 model=self.agent_config.model_name,
                 messages=messages,
