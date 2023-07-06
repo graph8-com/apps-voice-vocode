@@ -117,6 +117,10 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
                     return
             else:
                 raise ValueError("Invalid AgentInput type")
+            
+            if self.agent_config.send_filler_audio:
+                self.produce_interruptible_event_nonblocking(AgentResponseFillerAudio())
+            self.logger.debug("Responding to transcription")
 
             messages = format_openai_chat_messages_from_transcript(
                 self.transcript, SYSTEM_MESSAGE.format(locations=self.locations, company=self.company, date=f"{self.date}", availabilities=str(self.availabilities))
