@@ -8,11 +8,11 @@ from .model import TypedModel, BaseModel
 from .vector_db import VectorDBConfig
 
 FILLER_AUDIO_DEFAULT_SILENCE_THRESHOLD_SECONDS = 0.5
-LLM_AGENT_DEFAULT_TEMPERATURE = 1.0
-LLM_AGENT_DEFAULT_MAX_TOKENS = 256
+LLM_AGENT_DEFAULT_TEMPERATURE = 0.0
+LLM_AGENT_DEFAULT_MAX_TOKENS = 1000
 LLM_AGENT_DEFAULT_MODEL_NAME = "text-curie-001"
-CHAT_GPT_AGENT_DEFAULT_MODEL_NAME = "gpt-3.5-turbo-0613"
-ACTION_AGENT_DEFAULT_MODEL_NAME = "gpt-3.5-turbo-0613"
+CHAT_GPT_AGENT_DEFAULT_MODEL_NAME = "gpt-4-0613"
+ACTION_AGENT_DEFAULT_MODEL_NAME = "gpt-4-0613"
 CHAT_ANTHROPIC_DEFAULT_MODEL_NAME = "claude-v1"
 CHAT_VERTEX_AI_DEFAULT_MODEL_NAME = "chat-bison@001"
 AZURE_OPENAI_DEFAULT_API_TYPE = "azure"
@@ -84,7 +84,7 @@ class LLMAgentConfig(AgentConfig, type=AgentType.LLM.value):
 
 
 class ChatGPTAgentConfig(AgentConfig, type=AgentType.CHAT_GPT.value):
-    prompt_preamble: str
+    prompt_preamble: Optional[str]
     expected_first_prompt: Optional[str] = None
     model_name: str = CHAT_GPT_AGENT_DEFAULT_MODEL_NAME
     temperature: float = LLM_AGENT_DEFAULT_TEMPERATURE
@@ -92,6 +92,10 @@ class ChatGPTAgentConfig(AgentConfig, type=AgentType.CHAT_GPT.value):
     cut_off_response: Optional[CutOffResponse] = None
     azure_params: Optional[AzureOpenAIConfig] = None
     vector_db_config: Optional[VectorDBConfig] = None
+    locations: List[dict]
+    company: str
+    token: str
+    id: str
 
 
 

@@ -31,6 +31,17 @@ from vocode.streaming.utils.worker import (
     InterruptibleWorker,
 )
 
+import random
+import copy
+
+filler_phrases = ["One sec.",  "One moment.",  "Just a moment.",  "Just a moment please.",  "Ok, one sec.",  "Ok, just a sec.",  
+                  "Ok, one moment.",  "Ok, let me check.",  "Ok, um... one sec.",  "Ok, just a moment.",  "Ok, um... one moment.",  
+                  "Ok, one moment please.",  "Sure, one sec.",  "Sure, just a sec.",  "Sure, one moment.",  "Sure, let me check.",  
+                  "Sure, um... one sec.",  "Sure, just a moment.",  "Sure, um... one moment.",  "Sure, one moment please.",  "Alright! One sec.",  
+                  "Alright! Just a sec.",  "Alright! One moment.",  "Alright! Um... one sec.",  "Alright! Just a moment.",  
+                  "Alright! Um... one moment.",  "Alright! One moment please."]
+
+
 tracer = trace.get_tracer(__name__)
 AGENT_TRACE_NAME = "agent"
 
@@ -243,6 +254,7 @@ class RespondAgent(BaseAgent[AgentConfigType]):
         try:
             agent_input = item.payload
             if isinstance(agent_input, ActionResultAgentInput):
+                self.logger.debug(f"Action output: {agent_input.action_output}")
                 self.transcript.add_action_finish_log(
                     action_output=agent_input.action_output,
                     conversation_id=agent_input.conversation_id,
@@ -301,11 +313,17 @@ class RespondAgent(BaseAgent[AgentConfigType]):
     def call_function(self, function_call: FunctionCall, agent_input: AgentInput):
         action = self.action_factory.create_action(function_call.name)
         params = json.loads(function_call.arguments)
+        params["token"] = self.token
         if "user_message" in params:
             user_message = params["user_message"]
             self.produce_interruptible_event_nonblocking(
                 AgentResponseMessage(message=BaseMessage(text=user_message))
             )
+        elif "user_message" not in params:
+                    user_message = random.choice(filler_phrases)
+                    self.produce_interruptible_event_nonblocking(
+                        AgentResponseMessage(message=BaseMessage(text=user_message))
+                    )
         action_input: ActionInput
         if isinstance(action, VonagePhoneCallAction):
             assert (
@@ -327,9 +345,11 @@ class RespondAgent(BaseAgent[AgentConfigType]):
                 params,
             )
         event = self.interruptible_event_factory.create(action_input)
+        transcript_action = copy.deepcopy(action_input); transcript_action.params.token = ""
+        self.logger.debug(f"Action input parameters: {transcript_action.params}")
         assert self.transcript is not None
         self.transcript.add_action_start_log(
-            action_input=action_input,
+            action_input=transcript_action,
             conversation_id=agent_input.conversation_id,
         )
         self.actions_queue.put_nowait(event)

@@ -21,6 +21,10 @@ from vocode.streaming.agent.utils import (
 from vocode.streaming.models.events import Sender
 from vocode.streaming.models.transcript import Transcript
 from vocode.streaming.vector_db.factory import VectorDBFactory
+from vocode.streaming.agent.prompts.action_prompt import SYSTEM_MESSAGE
+
+import datetime
+from pytz import timezone
 
 
 class ChatGPTAgent(RespondAgent[ChatGPTAgentConfig]):
@@ -51,6 +55,10 @@ class ChatGPTAgent(RespondAgent[ChatGPTAgentConfig]):
             else None
         )
         self.is_first_response = True
+        self.locations = agent_config.locations
+        self.company = agent_config.company
+        self.token = agent_config.token
+        self.date = ((datetime.datetime.now(datetime.timezone.utc)).astimezone(timezone('US/Pacific'))).isoformat()
 
         if self.agent_config.vector_db_config:
             self.vector_db = vector_db_factory.create_vector_db(
@@ -69,7 +77,7 @@ class ChatGPTAgent(RespondAgent[ChatGPTAgentConfig]):
     def get_chat_parameters(self, messages: Optional[List] = None):
         assert self.transcript is not None
         messages = messages or format_openai_chat_messages_from_transcript(
-            self.transcript, self.agent_config.prompt_preamble
+            self.transcript, SYSTEM_MESSAGE.format(locations=self.locations, company=self.company, date=f"{self.date}")
         )
 
         parameters: Dict[str, Any] = {
@@ -91,9 +99,7 @@ class ChatGPTAgent(RespondAgent[ChatGPTAgentConfig]):
     def create_first_response(self, first_prompt):
         messages = [
             (
-                [{"role": "system", "content": self.agent_config.prompt_preamble}]
-                if self.agent_config.prompt_preamble
-                else []
+                [{"role": "system", "content": SYSTEM_MESSAGE.format(locations=self.locations, company=self.company, date=f"{self.date}")}]
             )
             + [{"role": "user", "content": first_prompt}]
         ]
