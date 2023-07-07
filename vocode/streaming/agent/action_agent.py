@@ -128,6 +128,9 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
                     self.produce_interruptible_event_nonblocking(
                         AgentResponseMessage(message=BaseMessage(text=user_message))
                     )
+                    # if self.agent_config.send_filler_audio:
+                    #     self.produce_interruptible_event_nonblocking(AgentResponseFillerAudio())
+                    #     self.logger.debug("Responding to transcription")
                 action_input: ActionInput
                 if isinstance(action, VonagePhoneCallAction):
                     assert (
