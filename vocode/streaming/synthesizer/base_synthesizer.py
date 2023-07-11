@@ -36,8 +36,8 @@ FILLER_PHRASES = [
 ]
 FILLER_AUDIO_PATH = os.path.join(os.path.dirname(__file__), "filler_audio")
 TYPING_NOISE_PATH = "%s/typing-noise.wav" % FILLER_AUDIO_PATH
-TYPING_NOISE_1 = "%s/typing1.wav" % FILLER_AUDIO_PATH
-TYPING_NOISE_2 = "%s/typing2.wav" % FILLER_AUDIO_PATH
+TYPING_NOISE_1 = "%s/Klackity.wav" % FILLER_AUDIO_PATH
+TYPING_NOISE_2 = "%s/Klackity2.wav" % FILLER_AUDIO_PATH
 
 def encode_as_wav(chunk: bytes, synthesizer_config: SynthesizerConfig) -> bytes:
     output_bytes_io = io.BytesIO()
