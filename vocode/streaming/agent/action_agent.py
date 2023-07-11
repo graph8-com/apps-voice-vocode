@@ -127,6 +127,7 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
                 action = self.action_factory.create_action(message.function_call.name)
                 params = json.loads(message.function_call.arguments)
                 params["token"] = self.token
+                params["timezone"] = self.timezone
                 if "user_message" in params:
                     user_message = params["user_message"]
                     self.produce_interruptible_event_nonblocking(

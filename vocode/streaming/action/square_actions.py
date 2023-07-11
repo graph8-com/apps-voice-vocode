@@ -14,7 +14,7 @@ import json
 class ServicesParameters(BaseModel):
     location_id: str = Field(..., description="ID corresponding to the single location if there's only one location; otherwise, ID corresponding to the location name selected by the caller.")
     token: Optional[str] = Field(None, description="token for the API call.")
-
+    timezone: Optional[str] = Field(None, description="business' timezone.")
 
 class ServicesOutput(BaseModel):
     response: str
@@ -68,6 +68,7 @@ class AvailabilityParameters(BaseModel):
     date: str = Field(..., description="Desired month and day of the month for the appointment, formatted as: June, 5th")
     time: str = Field(..., description="Desired time for the appointment, formatted as: 8 AM")
     token: Optional[str] = Field(None, description="token for the API call.")
+    timezone: Optional[str] = Field(None, description="business' timezone.")
 
 class AvailabilityOutput(BaseModel):
     response: str
@@ -136,27 +137,27 @@ class GetAvailability(BaseAction[AvailabilityParameters, AvailabilityOutput]):
         else:
             print("Request failed with status code:", response.status_code, response.text)
     
-    def parse_availability(self, datetime):
-        date_time_pt_str = None  
-        date_time_ahead_pt_str = None  
+    def parse_availability(self, datetime, tz_str):
+        date_time_tz_str = None  
+        date_time_ahead_tz_str = None  
 
         try:
-                    date_time_obj = parser.parse(datetime)
-                    pt_timezone = timezone('US/Pacific')
-                    date_time_pt = pt_timezone.localize(date_time_obj)
-                    date_time_pt_str = date_time_pt.isoformat()
-                    date_time_ahead_obj = date_time_pt + timedelta(hours=24)  # Add 24 hours for the square api call
-                    date_time_ahead_pt_str = date_time_ahead_obj.isoformat()
+            date_time_obj = parser.parse(datetime)
+            tz = timezone(tz_str)
+            date_time_tz = tz.localize(date_time_obj)
+            date_time_tz_str = date_time_tz.isoformat()
+            date_time_ahead_obj = date_time_tz + timedelta(hours=24)  # Add 24 hours
+            date_time_ahead_tz_str = date_time_ahead_obj.isoformat()
         except AttributeError:
-                print("no date or time found")
-                pass
-        return date_time_pt_str, date_time_ahead_pt_str
+            print("no date or time found")
+            pass
+        return date_time_tz_str, date_time_ahead_tz_str
 
     async def run(
         self, action_input: ActionInput[AvailabilityParameters]
     ) -> ActionOutput[AvailabilityOutput]:
         
-        av_first, av_ahead = self.parse_availability(action_input.params.date + " " + action_input.params.time)
+        av_first, av_ahead = self.parse_availability(action_input.params.date + " " + action_input.params.time, action_input.params.timezone)
         variation_id = self.get_variation_id(action_input.params.service, action_input.params.token, action_input.params.location_id)
         availability = self.get_availability(action_input.params.location_id, variation_id, av_first, av_ahead, action_input.params.token)
 
@@ -173,6 +174,7 @@ class SchedulerParameters(BaseModel):
     date: str = Field(..., description="Month and day of the month for the appointment, formatted as: June, 5th")
     time: str = Field(..., description="Desired time for the appointment, formatted as: 8 AM")
     token: Optional[str] = Field(None, description="token for the API call.")
+    timezone: Optional[str] = Field(None, description="business' timezone.")
 
 class SchedulerOutput(BaseModel):
     response: str
@@ -284,11 +286,11 @@ class Scheduler(BaseAction[SchedulerParameters, SchedulerOutput]):
                     continue
             return {"error": "Could not create booking with any member_id"}
     
-    def parse_booking(self, datetime):
+    def parse_booking(self, datetime, tz_str):
         date_time_pt_str = None
         if datetime:
                     date_time_obj = parser.parse(datetime)
-                    pt_timezone = timezone('US/Pacific')
+                    pt_timezone = timezone(tz_str)
                     date_time_pt = pt_timezone.localize(date_time_obj)
                     date_time_pt_str = date_time_pt.isoformat()
         else:
@@ -302,7 +304,7 @@ class Scheduler(BaseAction[SchedulerParameters, SchedulerOutput]):
         customer_id = self.create_customer(action_input.params.name, action_input.params.phone.replace('-', ''), action_input.params.token)
         member_ids = self.get_team_member_ids(action_input.params.token)
         variation_id, service_version  = self.get_service_data(action_input.params.token, action_input.params.service, action_input.params.location_id)
-        date_time = self.parse_booking(action_input.params.date + " " + action_input.params.time)
+        date_time = self.parse_booking(action_input.params.date + " " + action_input.params.time, action_input.params.timezone)
         booking = self.create_booking(action_input.params.location_id, variation_id, service_version, customer_id, date_time, action_input.params.token, member_ids)
 
         return ActionOutput(
@@ -315,6 +317,7 @@ class BookingsParameters(BaseModel):
     date: str = Field(..., description="Month and day of the month of the booking to look for, formatted as: June, 5th")
     time: str = Field(..., description="Time of the booking to look for, formatted as: 8 AM")
     token: Optional[str] = Field(None, description="token for the API call.")
+    timezone: Optional[str] = Field(None, description="business' timezone.")
 
 class BookingsOutput(BaseModel):
     response: str
@@ -404,27 +407,27 @@ class GetBookings(BaseAction[BookingsParameters, BookingsOutput]):
         
         return booking_details
     
-    def parse_time(self, datetime):
-        date_time_pt_str = None  
-        date_time_ahead_pt_str = None  
+    def parse_time(self, datetime, tz_str):
+        date_time_tz_str = None  
+        date_time_ahead_tz_str = None  
 
         try:
-                    date_time_obj = parser.parse(datetime)
-                    pt_timezone = timezone('US/Pacific')
-                    date_time_pt = pt_timezone.localize(date_time_obj)
-                    date_time_pt_str = date_time_pt.isoformat()
-                    date_time_ahead_obj = date_time_pt + timedelta(hours=48)  # Add 48 hours for the square api call
-                    date_time_ahead_pt_str = date_time_ahead_obj.isoformat()
+            date_time_obj = parser.parse(datetime)
+            tz = timezone(tz_str)
+            date_time_tz = tz.localize(date_time_obj)
+            date_time_tz_str = date_time_tz.isoformat()
+            date_time_ahead_obj = date_time_tz + timedelta(hours=24)  # Add 24 hours
+            date_time_ahead_tz_str = date_time_ahead_obj.isoformat()
         except AttributeError:
-                date_time_pt_str, date_time_ahead_pt_str =  None, None
-                return date_time_pt_str, date_time_ahead_pt_str
-        return date_time_pt_str, date_time_ahead_pt_str
+            print("no date or time found")
+            pass
+        return date_time_tz_str, date_time_ahead_tz_str
     
     async def run(
         self, action_input: ActionInput[BookingsParameters]
     ) -> ActionOutput[BookingsOutput]:
         
-        first_time, time_ahead = self.parse_time(action_input.params.date + " " + action_input.params.time)
+        first_time, time_ahead = self.parse_time(action_input.params.date + " " + action_input.params.time, action_input.params.timezone)
         bookings = self.get_square_bookings(first_time, time_ahead, action_input.params.token)
 
         return ActionOutput(
@@ -437,6 +440,7 @@ class UpdateBookingParameters(BaseModel):
     date: str = Field(..., description="Month and day of the month for the new booking, formatted as: June, 5th")
     time: str = Field(..., description="Time for the new booking, formatted as: 8 AM")
     token: Optional[str] = Field(None, description="token for the API call.")
+    timezone: Optional[str] = Field(None, description="business' timezone.")
 
 class UpdateBookingOutput(BaseModel):
     response: str
@@ -475,11 +479,11 @@ class UpdateBooking(BaseAction[UpdateBookingParameters, UpdateBookingOutput]):
             "start_at": booking.get('start_at', ''),
         }
     
-    def parse_booking(self, datetime):
+    def parse_booking(self, datetime, tz_str):
         date_time_pt_str = None
         if datetime:
                     date_time_obj = parser.parse(datetime)
-                    pt_timezone = timezone('US/Pacific')
+                    pt_timezone = timezone(tz_str)
                     date_time_pt = pt_timezone.localize(date_time_obj)
                     date_time_pt_str = date_time_pt.isoformat()
         else:
@@ -490,7 +494,7 @@ class UpdateBooking(BaseAction[UpdateBookingParameters, UpdateBookingOutput]):
         self, action_input: ActionInput[UpdateBookingParameters]
     ) -> ActionOutput[UpdateBookingOutput]:
         
-        start_at = self.parse_booking(action_input.params.date + " " + action_input.params.time)
+        start_at = self.parse_booking(action_input.params.date + " " + action_input.params.time, action_input.params.timezone)
         new_booking = self.update_booking(action_input.params.booking_id, start_at, action_input.params.token)
 
         return ActionOutput(
@@ -501,6 +505,7 @@ class UpdateBooking(BaseAction[UpdateBookingParameters, UpdateBookingOutput]):
 class CancelBookingParameters(BaseModel):
     booking_id: str = Field(..., description="ID of the appointment to cancel")
     token: Optional[str] = Field(None, description="token for the API call.")
+    timezone: Optional[str] = Field(None, description="business' timezone.")
 
 class CancelBookingOutput(BaseModel):
     response: str
