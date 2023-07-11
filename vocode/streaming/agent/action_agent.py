@@ -67,7 +67,16 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
         self.locations = agent_config.locations
         self.company = agent_config.company
         self.token = agent_config.token
-        self.date = ((datetime.datetime.now(datetime.timezone.utc)).astimezone(timezone('US/Pacific'))).isoformat()
+        self.timezone = agent_config.timezone
+        self.date = self.get_timezone()
+
+    def get_timezone(self):
+        try:
+            date = ((datetime.datetime.now(datetime.timezone.utc)).astimezone(timezone(self.timezone))).isoformat()
+            return date
+        except Exception:
+            date = ((datetime.datetime.now(datetime.timezone.utc)).astimezone(timezone('UTC'))).isoformat()
+            return date
 
     async def process(self, item: InterruptibleEvent[AgentInput]):
         assert self.transcript is not None
@@ -97,7 +106,7 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
             self.logger.debug("Responding to transcription")
 
             messages = format_openai_chat_messages_from_transcript(
-                self.transcript, SYSTEM_MESSAGE.format(locations=self.locations, company=self.company, date=f"{self.date}")
+                self.transcript, SYSTEM_MESSAGE.format(locations=self.locations, company=self.company, date=f"{self.date}", timezone=self.timezone)
             )
             #self.logger.debug(f"PROMPT\n{messages}")
             openai_response = await openai.ChatCompletion.acreate(

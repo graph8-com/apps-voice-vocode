@@ -113,6 +113,7 @@ class ActionAgentConfig(AgentConfig, type=AgentType.ACTION.value):
     locations: List[dict]
     company: str
     token: str
+    timezone: str
     id: str
 
 
