@@ -63,7 +63,7 @@ class GetServices(BaseAction[ServicesParameters, ServicesOutput]):
         )
 
 class AvailabilityParameters(BaseModel):
-    location_id: str = Field(..., description="ID corresponding to the single location if there's only one location; otherwise, ID corresponding to the location name selected by the caller.")
+    location_id: str = Field(..., description="ID corresponding to the business' location.")
     service: str = Field(..., description="Name of the service that matches the caller's request.")
     date: str = Field(..., description="Desired month and day of the month for the appointment, formatted as: June, 5th")
     time: str = Field(..., description="Desired time for the appointment, formatted as: 8 AM")
