@@ -68,9 +68,9 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
         self.company = agent_config.company
         self.token = agent_config.token
         self.timezone = agent_config.timezone
-        self.date = self.get_timezone()
+        self.date = self.get_current_time()
 
-    def get_timezone(self):
+    def get_current_time(self):
         try:
             date = ((datetime.datetime.now(datetime.timezone.utc)).astimezone(timezone(self.timezone))).isoformat()
             return date
