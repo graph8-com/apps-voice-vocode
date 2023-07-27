@@ -12,9 +12,9 @@ from pytz import timezone
 import json
 
 class ServicesParameters(BaseModel):
-    location_id: str = Field(..., description="ID corresponding to the single location if there's only one location; otherwise, ID corresponding to the location name selected by the caller.")
     token: Optional[str] = Field(None, description="token for the API call.")
     timezone: Optional[str] = Field(None, description="business' timezone.")
+    location_id: Optional[str] = Field(None, description="ID corresponding to the business' location.")
 
 class ServicesOutput(BaseModel):
     response: str
@@ -63,18 +63,18 @@ class GetServices(BaseAction[ServicesParameters, ServicesOutput]):
         )
 
 class AvailabilityParameters(BaseModel):
-    location_id: str = Field(..., description="ID corresponding to the business' location.")
     service: str = Field(..., description="Name of the service that matches the caller's request.")
     date: str = Field(..., description="Desired month and day of the month for the appointment, formatted as: June, 5th")
     time: str = Field(..., description="Desired time for the appointment, formatted as: 8 AM")
     token: Optional[str] = Field(None, description="token for the API call.")
     timezone: Optional[str] = Field(None, description="business' timezone.")
+    location_id: Optional[str] = Field(None, description="ID corresponding to the business' location.")
 
 class AvailabilityOutput(BaseModel):
     response: str
 
 class GetAvailability(BaseAction[AvailabilityParameters, AvailabilityOutput]):
-    description: str = "Consult availability for a specific service on a given location, on a 24 hour range, starting from the date and time specified"
+    description: str = "Consult availability for a specific service on a given location, on a 24 hour range, starting from the date and time specified. Use this in case immediate availabilities are not enough."
     action_type: str = "get_availability"
     parameters_type: Type[AvailabilityParameters] = AvailabilityParameters
     response_type: Type[AvailabilityOutput] = AvailabilityOutput
@@ -169,12 +169,12 @@ class GetAvailability(BaseAction[AvailabilityParameters, AvailabilityOutput]):
 class SchedulerParameters(BaseModel):
     name: str = Field(..., description="Name of the caller")
     phone: str = Field(..., description="Phone number of the caller")
-    location_id: str = Field(..., description="ID corresponding to the single location if there's only one location; otherwise, ID corresponding to the location name selected by the caller.")
     service: str = Field(..., description="Name of the service that matches the caller's request.")
     date: str = Field(..., description="Month and day of the month for the appointment, formatted as: June, 5th")
     time: str = Field(..., description="Desired time for the appointment, formatted as: 8 AM")
     token: Optional[str] = Field(None, description="token for the API call.")
     timezone: Optional[str] = Field(None, description="business' timezone.")
+    location_id: Optional[str] = Field(None, description="ID corresponding to the business' location.")
 
 class SchedulerOutput(BaseModel):
     response: str
@@ -318,6 +318,7 @@ class BookingsParameters(BaseModel):
     time: str = Field(..., description="Time of the booking to look for, formatted as: 8 AM")
     token: Optional[str] = Field(None, description="token for the API call.")
     timezone: Optional[str] = Field(None, description="business' timezone.")
+    location_id: Optional[str] = Field(None, description="ID corresponding to the business' location.")
 
 class BookingsOutput(BaseModel):
     response: str
@@ -441,6 +442,7 @@ class UpdateBookingParameters(BaseModel):
     time: str = Field(..., description="Time for the new booking, formatted as: 8 AM")
     token: Optional[str] = Field(None, description="token for the API call.")
     timezone: Optional[str] = Field(None, description="business' timezone.")
+    location_id: Optional[str] = Field(None, description="ID corresponding to the business' location.")
 
 class UpdateBookingOutput(BaseModel):
     response: str
@@ -506,6 +508,7 @@ class CancelBookingParameters(BaseModel):
     booking_id: str = Field(..., description="ID of the appointment to cancel")
     token: Optional[str] = Field(None, description="token for the API call.")
     timezone: Optional[str] = Field(None, description="business' timezone.")
+    location_id: Optional[str] = Field(None, description="ID corresponding to the business' location.")
 
 class CancelBookingOutput(BaseModel):
     response: str

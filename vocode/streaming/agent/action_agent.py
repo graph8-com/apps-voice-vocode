@@ -111,7 +111,7 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
             self.logger.debug("Responding to transcription")
 
             messages = format_openai_chat_messages_from_transcript(
-                self.transcript, SYSTEM_MESSAGE.format(locations=self.locations, company=self.company, date=f"{self.date}", timezone=self.timezone, availabilities=self.availabilities)
+                self.transcript, SYSTEM_MESSAGE.format(locations=(self.locations[0][0], self.locations[0][2]['business_hours']), company=self.company, date=f"{self.date}", timezone=self.timezone, availabilities=self.availabilities)
             )
             self.logger.debug(f"PROMPT\n{messages}")
             openai_response = await openai.ChatCompletion.acreate(
@@ -133,6 +133,7 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
                 params = json.loads(message.function_call.arguments)
                 params["token"] = self.token
                 params["timezone"] = self.timezone
+                params["location_id"] = self.locations[0][1]['id']
                 if "user_message" in params:
                     user_message = params["user_message"]
                     self.produce_interruptible_event_nonblocking(
