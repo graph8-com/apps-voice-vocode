@@ -69,10 +69,10 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
         self.token = agent_config.token
         self.timezone = agent_config.timezone
         self.date = self.get_current_time()
-        self.availabilities = self.load_availabilities()
+        self.availabilities = None
 
     async def load_availabilities(self):
-        self.availabilities = await json.loads(self.agent_config.cache.get(str(self.agent_config.id+"_availabilities")))
+        self.availabilities = json.loads(await self.agent_config.cache.get(str(self.agent_config.id+"_availabilities")))
 
     def get_current_time(self):
         try:
@@ -83,6 +83,7 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
             return date
 
     async def process(self, item: InterruptibleEvent[AgentInput]):
+        await self.load_availabilities()
         assert self.transcript is not None
         try:
             self.logger.debug("Responding to transcription")
@@ -110,9 +111,9 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
             self.logger.debug("Responding to transcription")
 
             messages = format_openai_chat_messages_from_transcript(
-                self.transcript, SYSTEM_MESSAGE.format(locations=self.locations, company=self.company, date=f"{self.date}", timezone=self.timezone)
+                self.transcript, SYSTEM_MESSAGE.format(locations=self.locations, company=self.company, date=f"{self.date}", timezone=self.timezone, availabilities=self.availabilities)
             )
-            #self.logger.debug(f"PROMPT\n{messages}")
+            self.logger.debug(f"PROMPT\n{messages}")
             openai_response = await openai.ChatCompletion.acreate(
                 model=self.agent_config.model_name,
                 messages=messages,
