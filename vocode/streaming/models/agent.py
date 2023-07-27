@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Any
 from enum import Enum
 
 from pydantic import validator
@@ -115,6 +115,7 @@ class ActionAgentConfig(AgentConfig, type=AgentType.ACTION.value):
     token: str
     timezone: str
     id: str
+    cache: Any
 
 
 class InformationRetrievalAgentConfig(

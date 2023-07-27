@@ -69,6 +69,10 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
         self.token = agent_config.token
         self.timezone = agent_config.timezone
         self.date = self.get_current_time()
+        self.availabilities = self.load_availabilities()
+
+    async def load_availabilities(self):
+        self.availabilities = await json.loads(self.agent_config.cache.get(str(self.agent_config.id+"_availabilities")))
 
     def get_current_time(self):
         try:
