@@ -10,8 +10,7 @@ from vocode.streaming.models.transcript import (
     Transcript,
 )
 
-SENTENCE_ENDINGS = [".", "!", "?", "\n"]
-
+SENTENCE_ENDINGS = [".", "!", "?", "\n", ","]
 
 async def stream_openai_response_async(
     gen: AsyncIterable[OpenAIObject],
