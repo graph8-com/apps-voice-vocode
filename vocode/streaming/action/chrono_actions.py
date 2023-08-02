@@ -182,7 +182,7 @@ def list_doctors(access_token):
     
 
 def appointment_templates_list(token, cursor, doctor, office, page_size, profile):
-    BASE_URL = "https://drchrono.com/api"
+    BASE_URL = "https://app.drchrono.com/api"
     HEADERS = {
     "Authorization": f"Bearer {token}",
     "Content-Type": "application/json",
@@ -205,7 +205,7 @@ def appointment_templates_list(token, cursor, doctor, office, page_size, profile
 
 
 def appointment_templates_read(token, id, doctor, office, profile):
-    BASE_URL = "https://drchrono.com/api"
+    BASE_URL = "https://app.drchrono.com/api"
     HEADERS = {
     "Authorization": f"Bearer {token}",
     "Content-Type": "application/json",
@@ -225,3 +225,38 @@ def appointment_templates_read(token, id, doctor, office, profile):
         return response.json()
     else:
         return response.status_code, response.text
+    
+
+def appointment_profiles_list(access_token, cursor=None, doctor=None, page_size=None):
+    url = "https://app.drchrono.com/api/appointment_profiles"
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+    }
+    params = {
+        'cursor': cursor,
+        'doctor': doctor,
+        'page_size': page_size,
+    }
+
+    response = requests.get(url, headers=headers, params=params)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        response.raise_for_status()
+
+def appointment_profiles_read(access_token, id, doctor=None):
+    url = f"https://app.drchrono.com/api/appointment_profiles/{id}"
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+    }
+    params = {
+        'doctor': doctor,
+    }
+
+    response = requests.get(url, headers=headers, params=params)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        response.raise_for_status()
