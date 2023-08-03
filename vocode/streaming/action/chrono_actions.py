@@ -260,3 +260,76 @@ def appointment_profiles_read(access_token, id, doctor=None):
         return response.json()
     else:
         response.raise_for_status()
+
+def patients_create(access_token, doctor=None, first_name=None, cell_phone=None):
+    url = "https://app.drchrono.com/api/patients"
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+    }
+    data = {
+        'doctor': doctor,
+        'first_name': first_name,
+        'gender': 'UNK',
+        'cell_phone': cell_phone,
+    }
+
+    response = requests.post(url, headers=headers, data=data)
+
+    if response.status_code == 201:
+        return response.json()
+    else:
+        response.raise_for_status()
+        return response.json()
+
+def patients_list(access_token, doctor=None, first_name=None, cell_phone=None):
+    url = "https://app.drchrono.com/api/patients"
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+    }
+    params = {
+        'doctor': doctor,
+        'first_name': first_name,
+        'gender': 'UNK',
+        'cell_phone': cell_phone,
+    }
+
+    response = requests.get(url, headers=headers, params=params)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        response.raise_for_status()
+
+def offices_list(access_token, cursor=None, doctor=None, page_size=None):
+    url = "https://app.drchrono.com/api/offices"
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+    }
+    params = {
+        'cursor': cursor,
+        'doctor': doctor,
+        'page_size': page_size,
+    }
+
+    response = requests.get(url, headers=headers, params=params)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        response.raise_for_status()
+
+def offices_read(access_token, id, doctor=None):
+    url = f"https://app.drchrono.com/api/offices/{id}"
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+    }
+    params = {
+        'doctor': doctor,
+    }
+
+    response = requests.get(url, headers=headers, params=params)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        response.raise_for_status()
