@@ -119,7 +119,7 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
             self.logger.debug("Responding to transcription")
 
             messages = format_openai_chat_messages_from_transcript(
-                self.transcript, self.availabilities
+                self.transcript, self.get_prompt()
             )
             self.logger.debug(f"PROMPT\n{messages}")
             openai_response = await openai.ChatCompletion.acreate(
