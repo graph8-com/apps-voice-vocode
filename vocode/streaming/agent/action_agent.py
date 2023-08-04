@@ -73,7 +73,10 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
         self.provider = agent_config.provider
 
     async def load_availabilities(self):
-        self.availabilities = json.loads(await self.agent_config.cache.get(str(self.agent_config.id+"_availabilities")))
+        try:
+            self.availabilities = json.loads(await self.agent_config.cache.get(str(self.agent_config.id+"_availabilities")))
+        except Exception:
+            pass
 
     def get_current_time(self):
         try:
@@ -116,7 +119,7 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
             self.logger.debug("Responding to transcription")
 
             messages = format_openai_chat_messages_from_transcript(
-                self.transcript, self.get_prompt()
+                self.transcript, self.availabilities
             )
             self.logger.debug(f"PROMPT\n{messages}")
             openai_response = await openai.ChatCompletion.acreate(
