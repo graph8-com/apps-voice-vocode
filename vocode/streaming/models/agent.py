@@ -116,6 +116,7 @@ class ActionAgentConfig(AgentConfig, type=AgentType.ACTION.value):
     timezone: str
     id: str
     cache: Any
+    provider: str
 
 
 class InformationRetrievalAgentConfig(

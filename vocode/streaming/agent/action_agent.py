@@ -26,7 +26,7 @@ from vocode.streaming.agent.base_agent import (
     BaseAgent,
     TranscriptionAgentInput,
 )
-from vocode.streaming.agent.prompts.action_prompt import ACTION_PROMPT_DEFAULT, SYSTEM_MESSAGE
+from vocode.streaming.agent.prompts.action_prompt import SYSTEM_MESSAGE, CHRONO_MESSAGE
 from vocode.streaming.agent.utils import (
     format_openai_chat_messages_from_transcript,
     stream_openai_response_async,
@@ -70,6 +70,7 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
         self.timezone = agent_config.timezone
         self.date = self.get_current_time()
         self.availabilities = None
+        self.provider = agent_config.provider
 
     async def load_availabilities(self):
         self.availabilities = json.loads(await self.agent_config.cache.get(str(self.agent_config.id+"_availabilities")))
@@ -81,6 +82,10 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
         except Exception:
             date = ((datetime.datetime.now(datetime.timezone.utc)).astimezone(timezone('UTC'))).isoformat()
             return date
+        
+    def get_prompt(self):
+        prompt = SYSTEM_MESSAGE.format(locations=(self.locations[0][0], self.locations[0][2]['business_hours']), company=self.company, date=f"{self.date}", timezone=self.timezone, availabilities=self.availabilities) if self.provider == "square" else CHRONO_MESSAGE.format(locations=self.locations, company=self.company, date=f"{self.date}", timezone=self.timezone, availabilities=self.availabilities)
+        return prompt
 
     async def process(self, item: InterruptibleEvent[AgentInput]):
         await self.load_availabilities()
@@ -111,7 +116,7 @@ class ActionAgent(BaseAgent[ActionAgentConfig]):
             self.logger.debug("Responding to transcription")
 
             messages = format_openai_chat_messages_from_transcript(
-                self.transcript, SYSTEM_MESSAGE.format(locations=(self.locations[0][0], self.locations[0][2]['business_hours']), company=self.company, date=f"{self.date}", timezone=self.timezone, availabilities=self.availabilities)
+                self.transcript, self.get_prompt()
             )
             self.logger.debug(f"PROMPT\n{messages}")
             openai_response = await openai.ChatCompletion.acreate(
