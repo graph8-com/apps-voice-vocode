@@ -1,4 +1,4 @@
-SYSTEM_MESSAGE = """
+SQUARE_MESSAGE = """
 You're a phone assistant on a live conversation with a human. Use the following information to assist the caller:
 
 COMPANY: {company}

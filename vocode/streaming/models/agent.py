@@ -111,6 +111,7 @@ class ActionAgentConfig(AgentConfig, type=AgentType.ACTION.value):
     temperature: float = LLM_AGENT_DEFAULT_TEMPERATURE
     max_tokens: int = LLM_AGENT_DEFAULT_MAX_TOKENS
     locations: List
+    location_id: str
     company: str
     token: str
     timezone: str
