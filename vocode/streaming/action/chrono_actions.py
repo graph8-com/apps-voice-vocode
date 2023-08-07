@@ -179,7 +179,7 @@ class ServicesChronoOutput(BaseModel):
 
 class ServicesChrono(BaseAction[ServicesChronoParameters, ServicesChronoOutput]):
     description: str = "Retrieve services offered by the doctor"
-    action_type: str = "doctor_services"
+    action_type: str = "chrono_services"
     parameters_type: Type[ServicesChronoParameters] = ServicesChronoParameters
     response_type: Type[ServicesChronoOutput] = ServicesChronoOutput
 

@@ -25,7 +25,7 @@ class ActionFactory:
             return BookChrono()
         elif action_type == "availability":
             return AvailabilityChrono()
-        elif action_type == "doctor_services":
+        elif action_type == "chrono_services":
             return ServicesChrono()
         else:
             raise Exception("Invalid action type")
