@@ -138,9 +138,12 @@ class Transcript(BaseModel):
         )
         if self.events_manager is not None:
             self.events_manager.publish_event(
-                ActionEvent(
-                    action_input=action_input.dict(),
+                TranscriptEvent(
+                    text=str(action_input.action_config.type),
+                    sender=Sender.BOT,
+                    timestamp=time.time(),
                     conversation_id=conversation_id,
+                    action=str(action_input.params)
                 )
             )
 
@@ -179,6 +182,7 @@ class TranscriptEvent(Event, type=EventType.TRANSCRIPT):
     text: str
     sender: Sender
     timestamp: float
+    action: Optional[str]
 
     def to_string(self, include_timestamp: bool = False) -> str:
         if include_timestamp:

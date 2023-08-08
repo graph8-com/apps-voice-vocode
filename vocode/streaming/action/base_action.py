@@ -22,7 +22,7 @@ class BaseAction(Generic[ActionConfigType, ParametersType, ResponseType]):
     def __init__(
         self,
         action_config: ActionConfigType,
-        should_respond: bool = False,
+        should_respond: bool = True,
         quiet: bool = False,
         is_interruptible: bool = True,
     ):

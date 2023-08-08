@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Any
 from enum import Enum
 
 from pydantic import validator
@@ -94,6 +94,14 @@ class ChatGPTAgentConfig(AgentConfig, type=AgentType.CHAT_GPT.value):
     cut_off_response: Optional[CutOffResponse] = None
     azure_params: Optional[AzureOpenAIConfig] = None
     vector_db_config: Optional[VectorDBConfig] = None
+    locations: List
+    location_id: str
+    company: str
+    token: str
+    timezone: str
+    id: str
+    cache: Any
+    provider: str
 
 
 class ChatAnthropicAgentConfig(AgentConfig, type=AgentType.CHAT_ANTHROPIC.value):
