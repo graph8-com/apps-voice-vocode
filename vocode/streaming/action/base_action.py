@@ -14,7 +14,7 @@ class BaseAction(Generic[ParametersType, ResponseType]):
     description: str = ""
     action_type: str = ActionType.BASE.value
 
-    def __init__(self, should_respond: bool = False, quiet: bool = False):
+    def __init__(self, should_respond: bool = True, quiet: bool = False):
         self.should_respond = should_respond
         self.quiet = quiet
 
@@ -39,11 +39,11 @@ class BaseAction(Generic[ParametersType, ResponseType]):
     def get_openai_function(self):
         parameters_schema = self.parameters_type.schema()
         parameters_schema = exclude_keys_recursive(parameters_schema, {"title"})
-        if self.should_respond:
-            parameters_schema["properties"][
-                "user_message"
-            ] = self._user_message_param_info()
-            parameters_schema["required"].append("user_message")
+        # if self.should_respond:
+        #     parameters_schema["properties"][
+        #         "user_message"
+        #     ] = self._user_message_param_info()
+        #     parameters_schema["required"].append("user_message")
 
         return {
             "name": self.action_type,

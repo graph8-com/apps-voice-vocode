@@ -9,3 +9,7 @@ credentials.json
 **/call_transcripts/*.txt
 benchmark_results/
 private.key
+app.py
+logfile.txt
+utils/
+app2.py

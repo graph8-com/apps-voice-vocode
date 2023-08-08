@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Any
 from enum import Enum
 
 from pydantic import validator
@@ -8,11 +8,11 @@ from .model import TypedModel, BaseModel
 from .vector_db import VectorDBConfig
 
 FILLER_AUDIO_DEFAULT_SILENCE_THRESHOLD_SECONDS = 0.5
-LLM_AGENT_DEFAULT_TEMPERATURE = 1.0
-LLM_AGENT_DEFAULT_MAX_TOKENS = 256
+LLM_AGENT_DEFAULT_TEMPERATURE = 0.0
+LLM_AGENT_DEFAULT_MAX_TOKENS = 1000
 LLM_AGENT_DEFAULT_MODEL_NAME = "text-curie-001"
-CHAT_GPT_AGENT_DEFAULT_MODEL_NAME = "gpt-3.5-turbo-0613"
-ACTION_AGENT_DEFAULT_MODEL_NAME = "gpt-3.5-turbo-0613"
+CHAT_GPT_AGENT_DEFAULT_MODEL_NAME = "gpt-4-0613"
+ACTION_AGENT_DEFAULT_MODEL_NAME = "gpt-4-0613"
 CHAT_ANTHROPIC_DEFAULT_MODEL_NAME = "claude-v1"
 CHAT_VERTEX_AI_DEFAULT_MODEL_NAME = "chat-bison@001"
 AZURE_OPENAI_DEFAULT_API_TYPE = "azure"
@@ -92,6 +92,14 @@ class ChatGPTAgentConfig(AgentConfig, type=AgentType.CHAT_GPT.value):
     cut_off_response: Optional[CutOffResponse] = None
     azure_params: Optional[AzureOpenAIConfig] = None
     vector_db_config: Optional[VectorDBConfig] = None
+    locations: List
+    location_id: str
+    company: str
+    token: str
+    timezone: str
+    id: str
+    cache: Any
+    provider: str
 
 
 
