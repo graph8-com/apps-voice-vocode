@@ -33,6 +33,7 @@ class EventsManager:
         while True:
             try:
                 event = self.queue.get_nowait()
-                await self.handle_event(event)
+                if self.handle_event is not None:
+                    await self.handle_event(event)
             except asyncio.QueueEmpty:
                 break
