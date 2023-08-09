@@ -228,7 +228,7 @@ class DeleteAppointmentChronoOutput(BaseModel):
 
 class DeleteAppointmentChrono(BaseAction[DeleteAppointmentChronoConfig, DeleteAppointmentChronoParameters, DeleteAppointmentChronoOutput]):
     description: str = "Delete an appointment"
-    action_type: str = "delete_appointment"
+    action_type: str = "cancel_appointment"
     parameters_type: Type[DeleteAppointmentChronoParameters] = DeleteAppointmentChronoParameters
     response_type: Type[DeleteAppointmentChronoOutput] = DeleteAppointmentChronoOutput
 

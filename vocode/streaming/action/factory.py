@@ -33,5 +33,9 @@ class ActionFactory:
             return ServicesChrono(action_config)
         elif isinstance(action_config, AvailabilityChronoConfig):
             return AvailabilityChrono(action_config)
+        elif isinstance(action_config, UpdateAppointmentChronoConfig):
+            return UpdateAppointmentChrono(action_config)
+        elif isinstance(action_config, DeleteAppointmentChronoConfig):
+            return DeleteAppointmentChrono(action_config)
         else:
             raise Exception("Invalid action type")
