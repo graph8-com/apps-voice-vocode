@@ -108,7 +108,8 @@ class ChatGPTAgent(RespondAgent[ChatGPTAgentConfig]):
     async def load_availabilities(self):
         try:
             self.availabilities = json.loads(await self.agent_config.cache.get(str(self.agent_config.id+"_availabilities")))
-        except Exception:
+        except Exception as e:
+            self.logger.debug(f'Redis exception: {e}')
             self.availabilities = "N/A"
             pass
 

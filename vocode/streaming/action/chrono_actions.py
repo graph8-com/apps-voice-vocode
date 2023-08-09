@@ -96,7 +96,7 @@ class BookChrono(BaseAction[BookChronoConfig, BookChronoParameters, BookChronoOu
         response = self.book_appointment(action_input.params.token, date_time, action_input.params.doctor, patient['id'], action_input.params.location_id, action_input.params.duration)
 
         return ActionOutput(
-            action_type=action_input.action_type,
+            action_type=action_input.action_config.type,
             response=BookChronoOutput(response=str(response)),
         )
 
@@ -132,18 +132,13 @@ class AvailabilityChrono(BaseAction[AvailabilityChronoConfig, AvailabilityChrono
         return date_time_pt_str
 
     def list_appointments(self, access_token, date, doctor, office):
-
         base_url = "https://app.drchrono.com/api"
-
         endpoint = "/appointments"
-
         url = base_url + endpoint
-
         headers = {
             'Authorization': 'Bearer {}'.format(access_token),
             'Content-Type': 'application/json'
         }
-
         params = {
             'date': f'{date}',
             'doctor': f'{doctor}',
@@ -151,9 +146,7 @@ class AvailabilityChrono(BaseAction[AvailabilityChronoConfig, AvailabilityChrono
             'status': 'confirmed',
             'page_size': 5 
         }
-
         response = requests.get(url, headers=headers, params=params)
-
         if response.status_code == 200:
             print("Successfully retrieved appointments.")
             return response.json() 
@@ -169,7 +162,7 @@ class AvailabilityChrono(BaseAction[AvailabilityChronoConfig, AvailabilityChrono
         response = self.list_appointments(action_input.params.token, date, action_input.params.doctor, action_input.params.location_id)
 
         return ActionOutput(
-            action_type=action_input.action_type,
+            action_type=action_input.action_config.type,
             response=AvailabilityChronoOutput(response=str(response)),
         )
 
@@ -191,7 +184,7 @@ class ServicesChrono(BaseAction[ServicesChronoConfig, ServicesChronoParameters, 
     parameters_type: Type[ServicesChronoParameters] = ServicesChronoParameters
     response_type: Type[ServicesChronoOutput] = ServicesChronoOutput
 
-    def appointment_profiles_list(access_token, cursor=None, doctor=None, page_size=None):
+    def appointment_profiles_list(self, access_token, cursor=None, doctor=None, page_size=None):
         url = "https://app.drchrono.com/api/appointment_profiles"
         headers = {
             'Authorization': f'Bearer {access_token}',
@@ -217,110 +210,93 @@ class ServicesChrono(BaseAction[ServicesChronoConfig, ServicesChronoParameters, 
         response = self.appointment_profiles_list(action_input.params.token, action_input.params.doctor)
 
         return ActionOutput(
-            action_type=action_input.action_type,
+            action_type=action_input.action_config.type,
             response=ServicesChronoOutput(response=str(response)),
         )
 
-def delete_appointment(access_token, appointment_id):
-    base_url = "https://app.drchrono.com/api"
+class DeleteAppointmentChronoConfig(ActionConfig, type="chrono_services"):
+    pass
 
-    endpoint = f"/appointments/{appointment_id}"
+class DeleteAppointmentChronoParameters(BaseModel):
+    appointment: int = Field(..., description="ID of the appointment to cancel")
+    location_id: Optional[int] = Field(..., description="ID corresponding to the business' location")
+    token: Optional[str] = Field(None, description="token for the API call")
+    timezone: Optional[str] = Field(None, description="business' timezone")
 
-    url = base_url + endpoint
+class DeleteAppointmentChronoOutput(BaseModel):
+    response: str
 
-    headers = {
-        'Authorization': 'Bearer {}'.format(access_token),
-    }
+class DeleteAppointmentChrono(BaseAction[DeleteAppointmentChronoConfig, DeleteAppointmentChronoParameters, DeleteAppointmentChronoOutput]):
+    description: str = "Delete an appointment"
+    action_type: str = "delete_appointment"
+    parameters_type: Type[DeleteAppointmentChronoParameters] = DeleteAppointmentChronoParameters
+    response_type: Type[DeleteAppointmentChronoOutput] = DeleteAppointmentChronoOutput
 
-    response = requests.delete(url, headers=headers)
+    def delete_appointment(self, access_token, appointment_id):
+        base_url = "https://app.drchrono.com/api"
+        endpoint = f"/appointments/{appointment_id}"
+        url = base_url + endpoint
+        headers = {
+            'Authorization': 'Bearer {}'.format(access_token),
+        }
+        response = requests.delete(url, headers=headers)
+        if response.status_code == 204:
+            print("Appointment successfully deleted.")
+        else:
+            print("Failed to delete appointment. Status code: ", response.status_code)
+            return response.json()
 
-    if response.status_code == 204:
-        print("Appointment successfully deleted.")
-    else:
-        print("Failed to delete appointment. Status code: ", response.status_code)
-        return response.json()
+    async def run(
+        self, action_input: ActionInput[DeleteAppointmentChronoParameters]
+    ) -> ActionOutput[DeleteAppointmentChronoOutput]:
 
-def update_appointment(access_token, appointment_id):
-    base_url = "https://app.drchrono.com/api"
+        response = self.delete_appointment(action_input.params.token, action_input.params.appointment)
 
-    endpoint = f"/appointments/{appointment_id}"
+        return ActionOutput(
+            action_type=action_input.action_config.type,
+            response=DeleteAppointmentChronoOutput(response=str(response)),
+        )
+    
 
-    url = base_url + endpoint
+class UpdateAppointmentChronoConfig(ActionConfig, type="chrono_services"):
+    pass
 
-    headers = {
-        'Authorization': 'Bearer {}'.format(access_token),
-        'Content-Type': 'application/json'
-    }
+class UpdateAppointmentChronoParameters(BaseModel):
+    appointment: int = Field(..., description="ID of the appointment to update")
+    location_id: Optional[int] = Field(..., description="ID corresponding to the business' location")
+    token: Optional[str] = Field(None, description="token for the API call")
+    timezone: Optional[str] = Field(None, description="business' timezone")
 
-    params = {
-        'date': datetime.now().isoformat(), 
-        'doctor': 123, 
-        'office': 456, 
-        'patient': 789,  
-        'status': 'confirmed'  
-    }
+class UpdateAppointmentChronoOutput(BaseModel):
+    response: str
 
-    response = requests.patch(url, headers=headers, json=params)
+class UpdateAppointmentChrono(BaseAction[UpdateAppointmentChronoConfig, UpdateAppointmentChronoParameters, UpdateAppointmentChronoOutput]):
+    description: str = "Update a specific appointment"
+    action_type: str = "update_appointment"
+    parameters_type: Type[UpdateAppointmentChronoParameters] = UpdateAppointmentChronoParameters
+    response_type: Type[UpdateAppointmentChronoOutput] = UpdateAppointmentChronoOutput
 
-    if response.status_code == 200:
-        print("Appointment successfully updated.")
-        return response.json() 
-    else:
-        print("Failed to update appointment. Status code: ", response.status_code)
-        return response.json()
+    def update_appointment(self, access_token, appointment_id):
+        base_url = "https://app.drchrono.com/api"
+        endpoint = f"/appointments/{appointment_id}"
+        url = base_url + endpoint
+        headers = {
+            'Authorization': 'Bearer {}'.format(access_token), # add new booking date
+        }
+        response = requests.delete(url, headers=headers)
+        if response.status_code == 204:
+            print("Appointment successfully deleted.")
+        else:
+            print("Failed to delete appointment. Status code: ", response.status_code)
+            return response.json()
 
+    async def run(
+        self, action_input: ActionInput[UpdateAppointmentChronoParameters]
+    ) -> ActionOutput[UpdateAppointmentChronoOutput]:
 
+        response = self.update_appointment(action_input.params.token, action_input.params.appointment)
 
-# LOCATIONS 
-def offices_list(access_token, cursor=None, doctor=None, page_size=None):
-    url = "https://app.drchrono.com/api/offices"
-    headers = {
-        'Authorization': f'Bearer {access_token}',
-    }
-    params = {
-        'cursor': cursor,
-        'doctor': doctor,
-        'page_size': page_size,
-    }
-
-    response = requests.get(url, headers=headers, params=params)
-
-    if response.status_code == 200:
-        return response.json()
-    else:
-        response.raise_for_status()
-
-def appointment_profiles_read(access_token, id, doctor=None):
-    url = f"https://app.drchrono.com/api/appointment_profiles/{id}"
-    headers = {
-        'Authorization': f'Bearer {access_token}',
-    }
-    params = {
-        'doctor': doctor,
-    }
-
-    response = requests.get(url, headers=headers, params=params)
-
-    if response.status_code == 200:
-        return response.json()
-    else:
-        response.raise_for_status()
-
-def patients_list(access_token, doctor=None, first_name=None, cell_phone=None):
-    url = "https://app.drchrono.com/api/patients"
-    headers = {
-        'Authorization': f'Bearer {access_token}',
-    }
-    params = {
-        'doctor': doctor,
-        'first_name': first_name,
-        'gender': 'UNK',
-        'cell_phone': cell_phone,
-    }
-
-    response = requests.get(url, headers=headers, params=params)
-
-    if response.status_code == 200:
-        return response.json()
-    else:
-        response.raise_for_status()
+        return ActionOutput(
+            action_type=action_input.action_config.type,
+            response=UpdateAppointmentChronoOutput(response=str(response)),
+        )
