@@ -263,6 +263,7 @@ class UpdateAppointmentChronoConfig(ActionConfig, type="chrono_services"):
 
 class UpdateAppointmentChronoParameters(BaseModel):
     appointment: int = Field(..., description="ID of the appointment to update")
+    date: str = Field(..., description="Desired month and day of the month for the new appointment, formatted as: June, 5th")
     location_id: Optional[int] = Field(..., description="ID corresponding to the business' location")
     token: Optional[str] = Field(None, description="token for the API call")
     timezone: Optional[str] = Field(None, description="business' timezone")
@@ -276,25 +277,42 @@ class UpdateAppointmentChrono(BaseAction[UpdateAppointmentChronoConfig, UpdateAp
     parameters_type: Type[UpdateAppointmentChronoParameters] = UpdateAppointmentChronoParameters
     response_type: Type[UpdateAppointmentChronoOutput] = UpdateAppointmentChronoOutput
 
-    def update_appointment(self, access_token, appointment_id):
+    def parse_booking(self, datetime, tz_str):
+        date_time_pt_str = None
+        if datetime:
+                    date_time_obj = parser.parse(datetime)
+                    pt_timezone = timezone(tz_str)
+                    date_time_pt = pt_timezone.localize(date_time_obj)
+                    date_time_pt_str = date_time_pt.isoformat()
+        else:
+            pass
+        return date_time_pt_str
+
+    def update_appointment(self, access_token, date, appointment_id):
         base_url = "https://app.drchrono.com/api"
         endpoint = f"/appointments/{appointment_id}"
         url = base_url + endpoint
+
         headers = {
-            'Authorization': 'Bearer {}'.format(access_token), # add new booking date
+            'Authorization': 'Bearer {}'.format(access_token),
         }
-        response = requests.delete(url, headers=headers)
-        if response.status_code == 204:
-            print("Appointment successfully deleted.")
-        else:
-            print("Failed to delete appointment. Status code: ", response.status_code)
+        data = {
+            'date': date
+        }
+        response = requests.put(url, headers=headers, json=data) 
+        if response.status_code == 204 or 200 or 201:
             return response.json()
+        else:
+            print("Failed to update appointment. Status code: ", response.status_code)
+            return response.json()
+
 
     async def run(
         self, action_input: ActionInput[UpdateAppointmentChronoParameters]
     ) -> ActionOutput[UpdateAppointmentChronoOutput]:
 
-        response = self.update_appointment(action_input.params.token, action_input.params.appointment)
+        date = self.parse_booking(action_input.params.date, action_input.params.timezone)
+        response = self.update_appointment(action_input.params.token, date, action_input.params.appointment)
 
         return ActionOutput(
             action_type=action_input.action_config.type,
