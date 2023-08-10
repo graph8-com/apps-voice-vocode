@@ -146,11 +146,11 @@ class BaseSynthesizer(Generic[SynthesizerConfigType]):
         return self.synthesizer_config
 
     def get_typing_noise_filler_audio(self) -> FillerAudio:
-        noise = TYPING_NOISE_3 #random.choice([TYPING_NOISE_1, TYPING_NOISE_2])
+        #noise = random.choice([TYPING_NOISE_1, TYPING_NOISE_2])
         return FillerAudio(
             message=BaseMessage(text="<typing noise>"),
             audio_data=convert_wav(
-                noise,
+                TYPING_NOISE_PATH,
                 output_sample_rate=self.synthesizer_config.sampling_rate,
                 output_encoding=self.synthesizer_config.audio_encoding,
             ),

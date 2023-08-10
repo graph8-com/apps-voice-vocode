@@ -23,7 +23,7 @@ class ServicesOutput(BaseModel):
     response: str
 
 class GetServices(BaseAction[ServicesConfig, ServicesParameters, ServicesOutput]):
-    description: str = "Retrieve services offered by the company on a given location"
+    description: str = "Use this function only if the SERVICES section is empty. Output is services offered by the company"
     action_type: str = "get_services"
     parameters_type: Type[ServicesParameters] = ServicesParameters
     response_type: Type[ServicesOutput] = ServicesOutput
@@ -80,7 +80,7 @@ class AvailabilityOutput(BaseModel):
     response: str
 
 class GetAvailability(BaseAction[AvailabilityConfig, AvailabilityParameters, AvailabilityOutput]):
-    description: str = "Consult availability for a specific service on a given location, on a 24 hour range, starting from the date and time specified. Use this in case immediate availabilities are not enough."
+    description: str = "Consult availabilities after the next 48 hours. Output is availabilities for a specific service on a 24 hour range, starting from the date and time specified"
     action_type: str = "get_availability"
     parameters_type: Type[AvailabilityParameters] = AvailabilityParameters
     response_type: Type[AvailabilityOutput] = AvailabilityOutput
