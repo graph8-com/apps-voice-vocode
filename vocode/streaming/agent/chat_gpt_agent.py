@@ -149,8 +149,8 @@ class ChatGPTAgent(RespondAgent[ChatGPTAgentConfig]):
     def create_first_response(self, first_prompt):
         messages = [
             (
-                [{"role": "system", "content": self.agent_config.prompt_preamble}]
-                if self.agent_config.prompt_preamble
+                [{"role": "system", "content": self.system_message.format(locations=self.locations, company=self.company, date=f"{self.date}", timezone=self.timezone, availabilities=self.availabilities)}]
+                if self.system_message
                 else []
             )
             + [{"role": "user", "content": first_prompt}]
@@ -314,7 +314,7 @@ class ChatGPTAgent(RespondAgent[ChatGPTAgentConfig]):
         else:
             chat_parameters = self.get_chat_parameters()
             chat_completion = await openai.ChatCompletion.acreate(**chat_parameters)
-            self.logger.debug(f"Chat completion\n {chat_completion}")
+            #self.logger.debug(f"Chat completion\n {chat_completion}")
             text = chat_completion.choices[0].message.content
         self.logger.debug(f"LLM response: {text}")
         return text, False
@@ -361,7 +361,7 @@ class ChatGPTAgent(RespondAgent[ChatGPTAgentConfig]):
             chat_parameters = self.get_chat_parameters()
         chat_parameters["stream"] = True
         stream = await openai.ChatCompletion.acreate(**chat_parameters)
-        self.logger.debug(f"Stream\n {stream}")
+        #self.logger.debug(f"Stream\n {stream}")
         #loop = asyncio.get_event_loop()
         #loop.run_until_complete(self.print_values(stream))
         async for message in collate_response_async(
