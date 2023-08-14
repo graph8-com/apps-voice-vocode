@@ -80,7 +80,7 @@ class AvailabilityOutput(BaseModel):
     response: str
 
 class GetAvailability(BaseAction[AvailabilityConfig, AvailabilityParameters, AvailabilityOutput]):
-    description: str = "Use if IMMEDIATE AVAILAVILITIES are not enough. Output is availabilities for a specific service on a 24 hour range, starting from the date and time specified"
+    description: str = "Use this function if the IMMEDIATE AVAILAVILITIES section is not enough. Output is availabilities for a specific service on a 24 hour range, starting from the date and time specified"
     action_type: str = "get_availability"
     parameters_type: Type[AvailabilityParameters] = AvailabilityParameters
     response_type: Type[AvailabilityOutput] = AvailabilityOutput

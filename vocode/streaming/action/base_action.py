@@ -10,11 +10,19 @@ from vocode.streaming.models.actions import (
     ResponseType,
 )
 
+import random
+
 if TYPE_CHECKING:
     from vocode.streaming.utils.state_manager import ConversationStateManager
 
 ActionConfigType = TypeVar("ActionConfigType", bound=ActionConfig)
 
+filler_phrases = ["One sec.",  "One moment.",  "Just a moment.",  "Just a moment please.",  "Ok, one sec.",  "Ok, just a sec.",  
+                  "Ok, one moment.",  "Ok, let me check.",  "Ok, um... one sec.",  "Ok, just a moment.",  "Ok, um... one moment.",  
+                  "Ok, one moment please.",  "Sure, one sec.",  "Sure, just a sec.",  "Sure, one moment.",  "Sure, let me check.",  
+                  "Sure, um... one sec.",  "Sure, just a moment.",  "Sure, um... one moment.",  "Sure, one moment please.",  "Alright! One sec.",  
+                  "Alright! Just a sec.",  "Alright! One moment.",  "Alright! Um... one sec.",  "Alright! Just a moment.",  
+                  "Alright! Um... one moment.",  "Alright! One moment please."]
 
 class BaseAction(Generic[ActionConfigType, ParametersType, ResponseType]):
     description: str = ""
@@ -52,13 +60,13 @@ class BaseAction(Generic[ActionConfigType, ParametersType, ResponseType]):
     def get_openai_function(self):
         parameters_schema = self.parameters_type.schema()
         parameters_schema = exclude_keys_recursive(parameters_schema, {"title"})
-        if self.should_respond:
-            parameters_schema["properties"][
-                "user_message"
-            ] = self._user_message_param_info()
-            required = parameters_schema.get("required", [])
-            required.append("user_message")
-            parameters_schema["required"] = required
+        # if self.should_respond:
+        #     parameters_schema["properties"][
+        #         "user_message"
+        #     ] = self._user_message_param_info()
+        #     required = parameters_schema.get("required", [])
+        #     required.append("user_message")
+        #     parameters_schema["required"] = required
 
         return {
             "name": self.action_config.type,
@@ -82,9 +90,8 @@ class BaseAction(Generic[ActionConfigType, ParametersType, ResponseType]):
         )
 
     def _user_message_param_info(self):
+        phrase = random.choice(filler_phrases)
         return {
             "type": "string",
-            "description": """A message to reply to the user with BEFORE we make the function call. 
-                    Essentially a live response informing them that the function is about to happen.
-                    Eg Let me check the weather in San Francisco CA for you """,
+            "description": f"""Say "{phrase}" BEFORE making the function call""",
         }

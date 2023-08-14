@@ -65,15 +65,15 @@ class ChatGPTAgent(RespondAgent[ChatGPTAgentConfig]):
             agent_config=agent_config, action_factory=action_factory, logger=logger
         )
         if agent_config.azure_params:
-            openai.api_type = agent_config.azure_params.api_type
+            openai.api_type = "azure"
             openai.api_base = getenv("AZURE_OPENAI_API_BASE")
-            openai.api_version = agent_config.azure_params.api_version
+            openai.api_version = "2023-07-01-preview"
             openai.api_key = getenv("AZURE_OPENAI_API_KEY")
-        else:
-            openai.api_type = "open_ai"
-            openai.api_base = "https://api.openai.com/v1"
-            openai.api_version = None
-            openai.api_key = openai_api_key or getenv("OPENAI_API_KEY")
+        # else:
+        #     openai.api_type = "open_ai"
+        #     openai.api_base = "https://api.openai.com/v1"
+        #     openai.api_version = None
+        #     openai.api_key = openai_api_key or getenv("OPENAI_API_KEY")
         if not openai.api_key:
             raise ValueError("OPENAI_API_KEY must be set in environment or passed in")
         self.first_response = (
@@ -132,6 +132,7 @@ class ChatGPTAgent(RespondAgent[ChatGPTAgentConfig]):
             "messages": messages,
             "max_tokens": self.agent_config.max_tokens,
             "temperature": self.agent_config.temperature,
+            "function_call": "auto", 
         }
 
         if self.agent_config.azure_params is not None:
@@ -141,13 +142,16 @@ class ChatGPTAgent(RespondAgent[ChatGPTAgentConfig]):
 
         if self.functions:
             parameters["functions"] = self.functions
+            #self.logger.debug(f"FUNCTIONS\n{self.functions}")
 
         return parameters
 
     def create_first_response(self, first_prompt):
         messages = [
             (
-                [{"role": "system", "content": self.system_message.format(locations=self.locations, company=self.company, date=f"{self.date}", timezone=self.timezone, availabilities=self.availabilities)}]
+                [{"role": "system", "content": self.agent_config.prompt_preamble}]
+                if self.agent_config.prompt_preamble
+                else []
             )
             + [{"role": "user", "content": first_prompt}]
         ]
@@ -246,7 +250,7 @@ class ChatGPTAgent(RespondAgent[ChatGPTAgentConfig]):
         params["timezone"] = self.timezone
         params["location_id"] = self.location_id
         user_message_tracker = None
-        if "user_message" in params:
+        if "user_message" not in params:
             user_message = random.choice(filler_phrases)
             user_message_tracker = asyncio.Event()
             self.produce_interruptible_agent_response_event_nonblocking(
@@ -310,9 +314,15 @@ class ChatGPTAgent(RespondAgent[ChatGPTAgentConfig]):
         else:
             chat_parameters = self.get_chat_parameters()
             chat_completion = await openai.ChatCompletion.acreate(**chat_parameters)
+            self.logger.debug(f"Chat completion\n {chat_completion}")
             text = chat_completion.choices[0].message.content
         self.logger.debug(f"LLM response: {text}")
         return text, False
+    
+    # async def print_values(self, async_gen):
+    #     async for value in async_gen:
+    #         print("response?", value)
+
 
     async def generate_response(
         self,
@@ -351,6 +361,9 @@ class ChatGPTAgent(RespondAgent[ChatGPTAgentConfig]):
             chat_parameters = self.get_chat_parameters()
         chat_parameters["stream"] = True
         stream = await openai.ChatCompletion.acreate(**chat_parameters)
+        self.logger.debug(f"Stream\n {stream}")
+        #loop = asyncio.get_event_loop()
+        #loop.run_until_complete(self.print_values(stream))
         async for message in collate_response_async(
             openai_get_tokens(stream), get_functions=True
         ):
