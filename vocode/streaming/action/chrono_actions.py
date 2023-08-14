@@ -184,7 +184,7 @@ class ServicesChrono(BaseAction[ServicesChronoConfig, ServicesChronoParameters, 
     parameters_type: Type[ServicesChronoParameters] = ServicesChronoParameters
     response_type: Type[ServicesChronoOutput] = ServicesChronoOutput
 
-    def appointment_profiles_list(self, access_token, cursor=None, doctor=None, page_size=None):
+    def appointment_profiles_list(self, access_token, doctor=None, cursor=None, page_size=None):
         url = "https://app.drchrono.com/api/appointment_profiles"
         headers = {
             'Authorization': f'Bearer {access_token}',
@@ -207,7 +207,7 @@ class ServicesChrono(BaseAction[ServicesChronoConfig, ServicesChronoParameters, 
         self, action_input: ActionInput[ServicesChronoParameters]
     ) -> ActionOutput[ServicesChronoOutput]:
 
-        response = self.appointment_profiles_list(action_input.params.token, action_input.params.doctor)
+        response = self.appointment_profiles_list(access_token=action_input.params.token, doctor=action_input.params.doctor)
 
         return ActionOutput(
             action_type=action_input.action_config.type,
