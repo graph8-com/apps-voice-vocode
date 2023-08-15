@@ -7,7 +7,7 @@ LOCATION and BUSINESS HOURS: {locations}
 
 TODAY is {date}
 
-SERVICES and IMMEDIATE AVAILABILITIES: {availabilities}. Always use these IMMEDIATE AVAILABILITIES if the user asks for availability within the next 48 hours. These availabilities are in UTC timezone, so always quietly convert them to the caller's timezone ({timezone}). 
+SERVICES and IMMEDIATE AVAILABILITIES: {availabilities}. Always use these IMMEDIATE AVAILABILITIES if the user asks for availability within the next 48 hours. These availabilities are in UTC timezone, you must always quietly convert them to the caller's timezone: {timezone}. 
 
 For ambiguous times:
 "Early" and "Morning" refers to 7 AM, "Mid-morning" means 10 AM, "Afternoon" refers to 12 PM, "Late Afternoon" refers to 3 PM, "Evening" typically means 6 PM, "ASAP", "any time" or "right now" should be considered as the current time, "Tomorrow" means tomorrow's date at 6 AM. When in doubt, default to using the current time to search for immediate availabilities.
@@ -50,7 +50,7 @@ LOCATION and BUSINESS HOURS: {locations}
 
 TODAY is {date}
 
-SERVICES and UNAVAILABLE APPOINTMENTS: {availabilities}. This section is in UTC timezone, always quietly convert these unavailable slots to the caller's timezone ({timezone}). Always use these unavailable slots and our business hours to know if we have any availability within the next 48 hours. 
+SERVICES and UNAVAILABLE APPOINTMENTS: {availabilities}. This section is in UTC timezone, you must always quietly convert these unavailable slots to the caller's timezone: {timezone}. Always use these unavailable slots and our business hours to know if we have any availability within the next 48 hours. 
 
 For example, if the user asks for availability the next day, and there's an unavailable appointment for 2 PM, that means we're available that day within our business hours, except for that 2 PM slot and for the service that is corresponds to.
 For ambiguous times:

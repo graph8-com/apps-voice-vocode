@@ -19,8 +19,8 @@ class BookChronoConfig(ActionConfig, type="book_chrono"):
 class BookChronoParameters(BaseModel):
     date: str = Field(..., description="Date and time for the appointment, formatted as: July 8th, 8 AM")
     doctor: int = Field(..., description="ID of the doctor")
-    name: str = Field(..., description="Name of the patient")
-    phone: int = Field(..., description="Phone number of the patient")
+    name: str = Field(..., description="Name of the caller")
+    phone: int = Field(..., description="Phone number of the caller")
     duration: int = Field(..., description="Duration of the appointment to book")
     token: Optional[str] = Field(None, description="token for the API call.")
     timezone: Optional[str] = Field(None, description="business' timezone.")
@@ -67,6 +67,7 @@ class BookChrono(BaseAction[BookChronoConfig, BookChronoParameters, BookChronoOu
             'scheduled_time': f'{date}',
             'exam_room': 1,
             'duration': f'{duration}',
+            'status': 'Confirmed'
         }
         response = requests.post(url, headers=headers, json=params)
 
@@ -126,7 +127,7 @@ class AvailabilityChrono(BaseAction[AvailabilityChronoConfig, AvailabilityChrono
                     date_time_obj = parser.parse(datetime)
                     pt_timezone = timezone(tz_str)
                     date_time_pt = pt_timezone.localize(date_time_obj)
-                    date_time_pt_str = date_time_pt.isoformat()
+                    date_time_pt_str = f"{date_time_pt.date()}/{date_time_pt.date() + timedelta(days=2)}"
         else:
             pass
         return date_time_pt_str
@@ -140,11 +141,11 @@ class AvailabilityChrono(BaseAction[AvailabilityChronoConfig, AvailabilityChrono
             'Content-Type': 'application/json'
         }
         params = {
-            'date': f'{date}',
+            'date_range': f'{date}',
             'doctor': f'{doctor}',
             'office': f'{office}',
             'status': 'confirmed',
-            'page_size': 5 
+            'page_size': 10
         }
         response = requests.get(url, headers=headers, params=params)
         if response.status_code == 200:
