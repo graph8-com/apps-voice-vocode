@@ -116,7 +116,7 @@ class AvailabilityChronoOutput(BaseModel):
     response: str
 
 class AvailabilityChrono(BaseAction[AvailabilityChronoConfig, AvailabilityChronoParameters, AvailabilityChronoOutput]):
-    description: str = "Create a patient for a doctor"
+    description: str = "Consult booked appointments in a 48 hour range, starting from the date specified"
     action_type: str = "availability"
     parameters_type: Type[AvailabilityChronoParameters] = AvailabilityChronoParameters
     response_type: Type[AvailabilityChronoOutput] = AvailabilityChronoOutput
@@ -154,6 +154,36 @@ class AvailabilityChrono(BaseAction[AvailabilityChronoConfig, AvailabilityChrono
         else:
             print("Failed to retrieve appointments. Status code: ", response.status_code)
             return response.json()
+        
+    def get_patient(self, patient_id, access_token):
+        base_url = "https://app.drchrono.com/api/patients/"
+        headers = {
+            "Authorization": f"Bearer {access_token}"
+        }
+        response = requests.get(f"{base_url}{patient_id}", headers=headers)
+        
+        if response.status_code == 200:
+            response = response.json()
+            return response['first_name'], response['last_name'], response['cell_phone']
+        else:
+            return None 
+        
+    def parse_appointments(self, response_data, token):
+        appointments = []
+        
+        for result in response_data["results"]:
+            appointment = {
+                "booking_id": result['id'],
+                "scheduled_time": result["scheduled_time"],
+                "duration": result["duration"],
+                "patient_id": result["patient"],
+                "doctor_id": result["doctor"],
+                "exam_room": result["exam_room"],
+                "patient name and phone": self.get_patient(result['patient'], token)
+            }
+            appointments.append(appointment)
+        
+        return appointments
 
     async def run(
         self, action_input: ActionInput[AvailabilityChronoParameters]
@@ -161,10 +191,11 @@ class AvailabilityChrono(BaseAction[AvailabilityChronoConfig, AvailabilityChrono
 
         date = self.parse_booking(action_input.params.date, action_input.params.timezone)
         response = self.list_appointments(action_input.params.token, date, action_input.params.doctor, action_input.params.location_id)
+        parsed = self.parse_appointments(response, action_input.params.token)
 
         return ActionOutput(
             action_type=action_input.action_config.type,
-            response=AvailabilityChronoOutput(response=str(response)),
+            response=AvailabilityChronoOutput(response=str(parsed)),
         )
 
 class ServicesChronoConfig(ActionConfig, type="chrono_services"):
@@ -215,7 +246,7 @@ class ServicesChrono(BaseAction[ServicesChronoConfig, ServicesChronoParameters, 
             response=ServicesChronoOutput(response=str(response)),
         )
 
-class DeleteAppointmentChronoConfig(ActionConfig, type="chrono_services"):
+class DeleteAppointmentChronoConfig(ActionConfig, type="cancel_appointment"):
     pass
 
 class DeleteAppointmentChronoParameters(BaseModel):
@@ -228,7 +259,7 @@ class DeleteAppointmentChronoOutput(BaseModel):
     response: str
 
 class DeleteAppointmentChrono(BaseAction[DeleteAppointmentChronoConfig, DeleteAppointmentChronoParameters, DeleteAppointmentChronoOutput]):
-    description: str = "Delete an appointment"
+    description: str = "Cancel an appointment"
     action_type: str = "cancel_appointment"
     parameters_type: Type[DeleteAppointmentChronoParameters] = DeleteAppointmentChronoParameters
     response_type: Type[DeleteAppointmentChronoOutput] = DeleteAppointmentChronoOutput
@@ -242,7 +273,7 @@ class DeleteAppointmentChrono(BaseAction[DeleteAppointmentChronoConfig, DeleteAp
         }
         response = requests.delete(url, headers=headers)
         if response.status_code == 204:
-            print("Appointment successfully deleted.")
+            return response.json()
         else:
             print("Failed to delete appointment. Status code: ", response.status_code)
             return response.json()
@@ -259,7 +290,7 @@ class DeleteAppointmentChrono(BaseAction[DeleteAppointmentChronoConfig, DeleteAp
         )
     
 
-class UpdateAppointmentChronoConfig(ActionConfig, type="chrono_services"):
+class UpdateAppointmentChronoConfig(ActionConfig, type="update_appointment"):
     pass
 
 class UpdateAppointmentChronoParameters(BaseModel):
