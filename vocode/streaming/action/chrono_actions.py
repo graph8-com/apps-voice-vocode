@@ -1,5 +1,5 @@
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional, Type
 from pydantic import BaseModel, Field
 import os
@@ -9,7 +9,6 @@ from vocode.streaming.models.actions import ActionInput, ActionOutput, ActionTyp
 import requests
 import re
 from dateutil import parser
-from datetime import timedelta
 from pytz import timezone
 import json
 
@@ -19,8 +18,8 @@ class BookChronoConfig(ActionConfig, type="book_chrono"):
 class BookChronoParameters(BaseModel):
     date: str = Field(..., description="Date and time for the appointment, formatted as: July 8th, 8 AM")
     doctor: int = Field(..., description="ID of the doctor")
-    name: str = Field(..., description="Name of the caller")
-    phone: int = Field(..., description="Phone number of the caller")
+    name: str = Field(..., description="Name provided by the caller")
+    phone: int = Field(..., description="Phone number provided by the caller")
     duration: int = Field(..., description="Duration of the appointment to book")
     token: Optional[str] = Field(None, description="token for the API call.")
     timezone: Optional[str] = Field(None, description="business' timezone.")
@@ -294,8 +293,11 @@ class UpdateAppointmentChronoConfig(ActionConfig, type="update_appointment"):
     pass
 
 class UpdateAppointmentChronoParameters(BaseModel):
-    appointment: int = Field(..., description="ID of the appointment to update")
-    date: str = Field(..., description="Desired month and day of the month for the new appointment, formatted as: June, 5th")
+    appointment_id: int = Field(..., description="ID of the appointment to update")
+    patient_id: int = Field(..., description="ID of the patient")
+    doctor_id: int = Field(..., description="ID of the doctor")
+    date: str = Field(..., description="Date and time for the new appointment, formatted as: July 8th, 8 AM")
+    duration: int = Field(..., description="Duration of the appointment to book")
     location_id: Optional[int] = Field(..., description="ID corresponding to the business' location")
     token: Optional[str] = Field(None, description="token for the API call")
     timezone: Optional[str] = Field(None, description="business' timezone")
@@ -320,7 +322,7 @@ class UpdateAppointmentChrono(BaseAction[UpdateAppointmentChronoConfig, UpdateAp
             pass
         return date_time_pt_str
 
-    def update_appointment(self, access_token, date, appointment_id):
+    def update_appointment(self, access_token, date, appointment_id, doctor, patient, office, duration):
         base_url = "https://app.drchrono.com/api"
         endpoint = f"/appointments/{appointment_id}"
         url = base_url + endpoint
@@ -329,11 +331,20 @@ class UpdateAppointmentChrono(BaseAction[UpdateAppointmentChronoConfig, UpdateAp
             'Authorization': 'Bearer {}'.format(access_token),
         }
         data = {
-            'date': date
+            'doctor': f'{doctor}',
+            'patient': f'{patient}',
+            'office': f'{office}',
+            'scheduled_time': f'{date}',
+            'exam_room': 1,
+            'status': 'Confirmed',
+            'duration': f'{duration}',
         }
         response = requests.put(url, headers=headers, json=data) 
         if response.status_code == 204 or 200 or 201:
-            return response.json()
+            try:
+                return response.json()
+            except Exception:
+                return response.text
         else:
             print("Failed to update appointment. Status code: ", response.status_code)
             return response.json()
@@ -344,7 +355,7 @@ class UpdateAppointmentChrono(BaseAction[UpdateAppointmentChronoConfig, UpdateAp
     ) -> ActionOutput[UpdateAppointmentChronoOutput]:
 
         date = self.parse_booking(action_input.params.date, action_input.params.timezone)
-        response = self.update_appointment(action_input.params.token, date, action_input.params.appointment)
+        response = self.update_appointment(action_input.params.token, date, action_input.params.appointment_id, action_input.params.doctor_id, action_input.params.patient_id, action_input.params.location_id, action_input.params.duration)
 
         return ActionOutput(
             action_type=action_input.action_config.type,
