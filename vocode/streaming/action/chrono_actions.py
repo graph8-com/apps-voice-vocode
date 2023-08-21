@@ -115,7 +115,7 @@ class AvailabilityChronoOutput(BaseModel):
     response: str
 
 class AvailabilityChrono(BaseAction[AvailabilityChronoConfig, AvailabilityChronoParameters, AvailabilityChronoOutput]):
-    description: str = "Consult booked appointments in a 48 hour range, starting from the date specified"
+    description: str = "Consult booked appointments in a 48 hour range. Blank output means full availability in our business hours."
     action_type: str = "availability"
     parameters_type: Type[AvailabilityChronoParameters] = AvailabilityChronoParameters
     response_type: Type[AvailabilityChronoOutput] = AvailabilityChronoOutput
