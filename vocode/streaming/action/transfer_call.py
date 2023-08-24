@@ -18,7 +18,7 @@ class TransferCallActionConfig(ActionConfig, type=ActionType.TRANSFER_CALL):
     pass
 
 class TransferCallParameters(BaseModel):
-    to_phone: int = Field(..., description="phone number to transfer the call to")
+    to_phone: str = Field(..., description="phone number to transfer the call to, formatted as: +12345678901")
 
 
 class TransferCallResponse(BaseModel):
