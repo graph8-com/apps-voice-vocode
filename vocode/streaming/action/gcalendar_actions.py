@@ -101,7 +101,7 @@ class AvailabilityGoogleOutput(BaseModel):
     response: str
 
 class AvailabilityGoogle(BaseAction[AvailabilityGoogleConfig, AvailabilityGoogleParameters, AvailabilityGoogleOutput]):
-    description: str = "Consult booked appointments. Output is the next 5 booked appointments, starting from the date and time specified."
+    description: str = "Consult booked appointments. Output is the next 10 booked appointments, starting from the date and time specified."
     action_type: str = "calendar_availability"
     parameters_type: Type[AvailabilityGoogleParameters] = AvailabilityGoogleParameters
     response_type: Type[AvailabilityGoogleOutput] = AvailabilityGoogleOutput
@@ -114,7 +114,7 @@ class AvailabilityGoogle(BaseAction[AvailabilityGoogleConfig, AvailabilityGoogle
                     time = self.parse_time(date, tz_str)
                     print('Getting the upcoming 10 events')
                     events_result = service.events().list(calendarId='primary', timeMin=time,
-                                                        maxResults=5, singleEvents=True,
+                                                        maxResults=10, singleEvents=True,
                                                         orderBy='startTime').execute()
                     events = events_result.get('items', [])
 
