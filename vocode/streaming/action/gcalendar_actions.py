@@ -32,7 +32,7 @@ class BookGoogleParameters(BaseModel):
 class BookGoogleOutput(BaseModel):
     response: str
 
-class BookChrono(BaseAction[BookGoogleConfig, BookGoogleParameters, BookGoogleOutput]):
+class BookGoogle(BaseAction[BookGoogleConfig, BookGoogleParameters, BookGoogleOutput]):
     description: str = "Book an appointment on a specific date and time"
     action_type: str = "book_calendar"
     parameters_type: Type[BookGoogleParameters] = BookGoogleParameters
@@ -100,7 +100,7 @@ class AvailabilityGoogleParameters(BaseModel):
 class AvailabilityGoogleOutput(BaseModel):
     response: str
 
-class AvailabilityChrono(BaseAction[AvailabilityGoogleConfig, AvailabilityGoogleParameters, AvailabilityGoogleOutput]):
+class AvailabilityGoogle(BaseAction[AvailabilityGoogleConfig, AvailabilityGoogleParameters, AvailabilityGoogleOutput]):
     description: str = "Consult booked appointments. Output is the next 5 booked appointments, starting from the date and time specified."
     action_type: str = "calendar_availability"
     parameters_type: Type[AvailabilityGoogleParameters] = AvailabilityGoogleParameters
@@ -163,7 +163,7 @@ class UpdateGoogleParameters(BaseModel):
 class UpdateGoogleOutput(BaseModel):
     response: str
 
-class UpdateChrono(BaseAction[UpdateGoogleConfig, UpdateGoogleParameters, UpdateGoogleOutput]):
+class UpdateGoogle(BaseAction[UpdateGoogleConfig, UpdateGoogleParameters, UpdateGoogleOutput]):
     description: str = "Update a specific appointment"
     action_type: str = "calendar_update"
     parameters_type: Type[UpdateGoogleParameters] = UpdateGoogleParameters
@@ -229,7 +229,7 @@ class CancelGoogleParameters(BaseModel):
 class CancelGoogleOutput(BaseModel):
     response: str
 
-class CancelChrono(BaseAction[CancelGoogleConfig, CancelGoogleParameters, CancelGoogleOutput]):
+class CancelGoogle(BaseAction[CancelGoogleConfig, CancelGoogleParameters, CancelGoogleOutput]):
     description: str = "Cancel a specific appointment"
     action_type: str = "calendar_cancel"
     parameters_type: Type[CancelGoogleParameters] = CancelGoogleParameters

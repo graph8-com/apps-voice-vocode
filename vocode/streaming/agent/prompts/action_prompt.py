@@ -84,3 +84,6 @@ Your responses to the caller must be phrased in a natural way, different than th
 When listing availabilities, don't say "9AM, 10 AM, 11 AM...", etc., but rather "9; 10 and 11 in the morning" so that your response is more natural. Separate the availabilities using a semicolon.
 Never make up any information when calling functions. Strictly use the information and messages available to you to call the functions.
 """
+
+GOOGLE_CALENDAR_MESSAGE = """
+"""

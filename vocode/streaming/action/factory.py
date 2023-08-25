@@ -5,8 +5,9 @@ from vocode.streaming.action.nylas_send_email import (
 )
 from vocode.streaming.models.actions import ActionConfig
 from vocode.streaming.action.transfer_call import TransferCall, TransferCallActionConfig
-from vocode.streaming.action.square_actions import *
-from vocode.streaming.action.chrono_actions import *
+from vocode.streaming.action.square_actions import AvailabilityConfig, GetAvailability, ServicesConfig, GetBookings, GetServices, Scheduler, SchedulerConfig, BookingsConfig, CancelBookingConfig, CancelBooking, UpdateBooking, UpdateBookingConfig
+from vocode.streaming.action.chrono_actions import BookChrono, BookChronoConfig, ServicesChrono, ServicesChronoConfig, AvailabilityChrono, AvailabilityChronoConfig, UpdateAppointmentChrono, UpdateAppointmentChronoConfig, DeleteAppointmentChrono, DeleteAppointmentChronoConfig
+from vocode.streaming.action.gcalendar_actions import CancelGoogle, BookGoogle, BookGoogleConfig, AvailabilityGoogle, AvailabilityGoogleConfig, UpdateGoogle, UpdateGoogleConfig, CancelGoogleConfig
 
 
 class ActionFactory:
@@ -37,5 +38,13 @@ class ActionFactory:
             return UpdateAppointmentChrono(action_config)
         elif isinstance(action_config, DeleteAppointmentChronoConfig):
             return DeleteAppointmentChrono(action_config)
+        elif isinstance(action_config, BookGoogleConfig):
+            return BookGoogle(action_config)
+        elif isinstance(action_config, AvailabilityGoogleConfig):
+            return AvailabilityGoogle(action_config)
+        elif isinstance(action_config, UpdateGoogleConfig):
+            return UpdateGoogle(action_config)
+        elif isinstance(action_config, CancelGoogleConfig):
+            return CancelGoogle(action_config)
         else:
             raise Exception("Invalid action type")
