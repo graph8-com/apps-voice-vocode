@@ -30,7 +30,7 @@ class TransferCall(
         TransferCallActionConfig, TransferCallParameters, TransferCallResponse
     ]
 ):
-    description: str = "transfers the call. use when you need to connect the active call to a human."
+    description: str = "transfers the call. use when you need to forward the call."
     parameters_type: Type[TransferCallParameters] = TransferCallParameters
     response_type: Type[TransferCallResponse] = TransferCallResponse
 
