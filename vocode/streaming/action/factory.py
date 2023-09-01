@@ -15,7 +15,7 @@ class ActionFactory:
         if isinstance(action_config, NylasSendEmailActionConfig):
             return NylasSendEmail(action_config, should_respond=True)
         elif isinstance(action_config, TransferCallActionConfig):
-            return TransferCall(action_config)
+            return TransferCall(action_config, should_respond=True)
         elif isinstance(action_config, AvailabilityConfig):
             return GetAvailability(action_config)
         elif isinstance(action_config, ServicesConfig):
