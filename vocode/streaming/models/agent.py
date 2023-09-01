@@ -94,14 +94,14 @@ class ChatGPTAgentConfig(AgentConfig, type=AgentType.CHAT_GPT.value):
     cut_off_response: Optional[CutOffResponse] = None
     azure_params: Optional[AzureOpenAIConfig] = None
     vector_db_config: Optional[VectorDBConfig] = None
-    locations: List
-    location_id: str
-    company: str
-    token: str
-    timezone: str
-    id: str
-    cache: Any
-    provider: str
+    locations: Optional[List]
+    location_id: Optional[str]
+    company: Optional[str]
+    token: Optional[str]
+    timezone: Optional[str]
+    id: Optional[str]
+    cache: Optional[Any]
+    provider: Optional[str]
 
 
 class ChatAnthropicAgentConfig(AgentConfig, type=AgentType.CHAT_ANTHROPIC.value):
