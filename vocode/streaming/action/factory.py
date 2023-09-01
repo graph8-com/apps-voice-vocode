@@ -8,7 +8,7 @@ from vocode.streaming.action.transfer_call import TransferCall, TransferCallActi
 from vocode.streaming.action.square_actions import AvailabilityConfig, GetAvailability, ServicesConfig, GetBookings, GetServices, Scheduler, SchedulerConfig, BookingsConfig, CancelBookingConfig, CancelBooking, UpdateBooking, UpdateBookingConfig
 from vocode.streaming.action.chrono_actions import BookChrono, BookChronoConfig, ServicesChrono, ServicesChronoConfig, AvailabilityChrono, AvailabilityChronoConfig, UpdateAppointmentChrono, UpdateAppointmentChronoConfig, DeleteAppointmentChrono, DeleteAppointmentChronoConfig
 from vocode.streaming.action.gcalendar_actions import CancelGoogle, BookGoogle, BookGoogleConfig, AvailabilityGoogle, AvailabilityGoogleConfig, UpdateGoogle, UpdateGoogleConfig, CancelGoogleConfig
-
+from vocode.streaming.action.google_send_email import GoogleSendEmail, GoogleSendEmailActionConfig
 
 class ActionFactory:
     def create_action(self, action_config: ActionConfig) -> BaseAction:
@@ -46,5 +46,7 @@ class ActionFactory:
             return UpdateGoogle(action_config)
         elif isinstance(action_config, CancelGoogleConfig):
             return CancelGoogle(action_config)
+        elif isinstance(action_config, GoogleSendEmailActionConfig):
+            return GoogleSendEmail(action_config)
         else:
             raise Exception("Invalid action type")

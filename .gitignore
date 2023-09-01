@@ -14,3 +14,4 @@ logfile.txt
 utils/
 app2.py
 token.json
+google_mail_token.json
