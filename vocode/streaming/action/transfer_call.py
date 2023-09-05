@@ -30,7 +30,7 @@ class TransferCall(
         TransferCallActionConfig, TransferCallParameters, TransferCallResponse
     ]
 ):
-    description: str = "transfers the call to another phone number."
+    description: str = "transfers the call to another phone number. Only call this after confirming the transfer with the caller (except in the case where the call is spam, in that case you can transfer without confirmation)."
     parameters_type: Type[TransferCallParameters] = TransferCallParameters
     response_type: Type[TransferCallResponse] = TransferCallResponse
 
