@@ -14,6 +14,7 @@ from vocode.streaming.models.synthesizer import (
     StreamElementsSynthesizerConfig,
     SynthesizerConfig,
     SynthesizerType,
+    BarkSynthesizerConfig
 )
 from vocode.streaming.synthesizer.azure_synthesizer import AzureSynthesizer
 from vocode.streaming.synthesizer.eleven_labs_synthesizer import ElevenLabsSynthesizer
@@ -21,6 +22,7 @@ from vocode.streaming.synthesizer.google_synthesizer import GoogleSynthesizer
 from vocode.streaming.synthesizer.gtts_synthesizer import GTTSSynthesizer
 from vocode.streaming.synthesizer.play_ht_synthesizer import PlayHtSynthesizer
 from vocode.streaming.synthesizer.rime_synthesizer import RimeSynthesizer
+from vocode.streaming.synthesizer.bark_synthesizer import BarkSynthesizer
 from vocode.streaming.synthesizer.stream_elements_synthesizer import (
     StreamElementsSynthesizer,
 )
@@ -65,6 +67,10 @@ class SynthesizerFactory:
         elif isinstance(synthesizer_config, CoquiTTSSynthesizerConfig):
             return CoquiTTSSynthesizer(
                 synthesizer_config, logger=logger, aiohttp_session=aiohttp_session
+            )
+        elif isinstance(synthesizer_config, BarkSynthesizerConfig):
+            return BarkSynthesizer(
+                synthesizer_config, logger=logger,
             )
         else:
             raise Exception("Invalid synthesizer config")
