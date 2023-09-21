@@ -96,7 +96,7 @@ class MessageTakingActionConfig(ActionConfig, type="take_message"):
     pass
 
 class MessageTakingParameters(BaseModel):
-    message: str = Field(..., description="The message to record.")
+    left_message: str = Field(..., description="The message to record.")
     contact_info: str = Field(..., description="Caller's contact information, either an email or phone number.")
     id: Optional[str] =  Field(None, description="Business ID")
 
@@ -112,52 +112,11 @@ class MessageTaking(
     parameters_type: Type[MessageTakingParameters] = MessageTakingParameters
     response_type: Type[MessageTakingResponse] = MessageTakingResponse
 
-    def sendMessage(self, message, contact, id):
-        url = os.getenv('POSTGRES_URL')
-        conn = psycopg2.connect(url)
-
-        message_text = f"Message recorded by Folks:\n{message}\nContact details provided by caller: {contact}"
-
-        try:
-            with conn.cursor() as cur:
-                cur.execute(sql.SQL(
-                    """
-                    SELECT folks_phone_number FROM public.businesses
-                    WHERE id = %s
-                    LIMIT 1
-                    """),
-                    (id,)  
-                )
-                phone_number = cur.fetchone()
-
-                if phone_number:
-                    phone_number = phone_number[0]
-                    cur.execute(sql.SQL(
-                        """
-                        UPDATE public.calls
-                        SET message = %s
-                        WHERE phone_number = %s
-                        """), 
-                        (message_text, phone_number)
-                    )
-                else:
-                    return f"No business found with id: {id}"
-
-            conn.commit()
-            conn.close()
-            return "Successfully sent message."
-
-        except Exception as e:
-            conn.rollback()
-            return f"Failed to insert data into database: {e}"
-
     async def run(
         self, action_input: ActionInput[MessageTakingParameters]
     ) -> ActionOutput[MessageTakingResponse]:
 
-        email = self.sendMessage(action_input.params.message, action_input.params.contact_info, action_input.params.id)
-
         return ActionOutput(
             action_type=self.action_config.type,
-            response=MessageTakingResponse(response=str(email)),
+            response=MessageTakingResponse(response=str("Message successfully sent.")),
         )
