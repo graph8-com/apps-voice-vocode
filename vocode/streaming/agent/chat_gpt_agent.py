@@ -96,6 +96,8 @@ class ChatGPTAgent(RespondAgent[ChatGPTAgentConfig]):
         self.availabilities = None
         self.provider = agent_config.provider
         self.system_message = agent_config.prompt_preamble
+        self.from_data = "N/A"
+        self.counter = 0
 
     def get_current_time(self):
         try:
@@ -125,7 +127,7 @@ class ChatGPTAgent(RespondAgent[ChatGPTAgentConfig]):
     def get_chat_parameters(self, messages: Optional[List] = None):
         assert self.transcript is not None
         messages = messages or format_openai_chat_messages_from_transcript(
-            self.transcript, self.system_message.format(locations=self.locations, company=self.company, date=f"{self.date}", timezone=self.timezone, availabilities=self.availabilities)
+            self.transcript, self.system_message.format(locations=self.locations, company=self.company, date=f"{self.date}", timezone=self.timezone, availabilities=self.availabilities, from_data=self.from_data)
         )
         self.logger.debug(f"PROMPT\n{messages}")
         parameters: Dict[str, Any] = {
@@ -335,7 +337,13 @@ class ChatGPTAgent(RespondAgent[ChatGPTAgentConfig]):
             yield cut_off_response
             return
         assert self.transcript is not None
-
+        if self.counter < 3:
+            try:
+                self.from_data = json.loads(await self.agent_config.cache.get(str(conversation_id+"_from_data")))
+                self.counter += 1
+            except Exception as e:
+                self.counter += 1
+                pass
         if self.agent_config.vector_db_config:
             docs_with_scores = await self.vector_db.similarity_search_with_score(
                 self.transcript.get_last_user_message()[1]

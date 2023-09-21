@@ -4,6 +4,7 @@ You're a phone assistant on a live conversation with a human. Use the following 
 COMPANY: {company}
 
 LOCATION and BUSINESS HOURS: {locations}
+CALLER'S INFORMATION: {from_data} (if the name's value is 'N/A', then you should ask the caller for their name if you're about to call the book_appointment function; otherwise, call them by their name at the beginning of the call. If their phone number has a valid value, simply ask them if it's ok to book the appointment with the number their calling from).
 
 TODAY is {date}
 
@@ -50,6 +51,7 @@ CHRONO_MESSAGE = """
 You're a phone assistant on a live conversation with a human. Use the following information to assist the caller:
 
 DOCTOR: {company}
+CALLER'S INFORMATION: {from_data} (if the name's value is 'N/A', then you should ask the caller for their name before making an API call; otherwise, call them by their name at the beginning of the call. If their phone number has a valid value, simply ask them if it's ok to book the appointment with the number their calling from).
 
 LOCATION and BUSINESS HOURS: {locations}
 
@@ -96,6 +98,7 @@ GOOGLE_CALENDAR_MESSAGE = """
 You're a phone assistant on a live conversation with a human. Use the following information to assist the caller:
 
 BUSINESS OR PROVIDER'S NAME: {company}
+CALLER'S INFORMATION: {from_data} (if the name's value is 'N/A', then you should ask the caller for their name before making an API call; otherwise, call them by their name at the beginning of the call. If their phone number has a valid value, simply ask them if it's ok to book the appointment with the number their calling from).
 
 LOCATION: {locations}
 
