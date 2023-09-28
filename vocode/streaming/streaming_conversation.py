@@ -10,6 +10,7 @@ import time
 import typing
 
 from vocode.streaming.action.worker import ActionsWorker
+from vocode.streaming.action.transfer_call import TransferCall
 
 from vocode.streaming.agent.bot_sentiment_analyser import (
     BotSentimentAnalyser,
@@ -462,6 +463,38 @@ class StreamingConversation(Generic[OutputDeviceType]):
 
     def create_state_manager(self) -> ConversationStateManager:
         return ConversationStateManager(conversation=self)
+    
+    async def transfer_call(self, twilio_call_sid, to_phone):
+        import os
+        import aiohttp
+        from aiohttp import BasicAuth
+        self.logger.debug(f"Starting transfer...")
+
+        twilio_account_sid = os.environ["TWILIO_ACCOUNT_SID"]
+        twilio_auth_token = os.environ["TWILIO_AUTH_TOKEN"]
+
+        url = "https://api.twilio.com/2010-04-01/Accounts/{twilio_account_sid}/Calls/{twilio_auth_token}.json".format(
+            twilio_account_sid=twilio_account_sid, twilio_auth_token=twilio_call_sid
+        )
+
+        twiml_data = "<Response><Dial>{to_phone}</Dial></Response>".format(
+            to_phone=to_phone
+        )
+
+        payload = {"Twiml": twiml_data}
+
+        auth = BasicAuth(twilio_account_sid, twilio_auth_token)
+        try:
+            async with aiohttp.ClientSession(auth=auth) as session:
+                async with session.post(url, data=payload) as response:
+                    if response.status != 200:
+                        self.logger.debug(await response.text())
+                        raise Exception("failed to update call")
+                    else:  
+                        self.logger.debug(f"Transfer complete")
+                        return await response.json()
+        except Exception as e:
+            self.logger.debug(f"Exception: {e}")
 
     async def start(self, mark_ready: Optional[Callable[[], Awaitable[None]]] = None):
         self.transcriber.start()
@@ -486,24 +519,31 @@ class StreamingConversation(Generic[OutputDeviceType]):
                     FillerAudioConfig, self.agent.get_agent_config().send_filler_audio
                 )
             await self.synthesizer.set_filler_audios(self.filler_audio_config)
-
-        self.agent.start()
-        initial_message = self.agent.get_agent_config().initial_message
-        if initial_message:
-            asyncio.create_task(self.send_initial_message(initial_message))
-        self.agent.attach_transcript(self.transcript)
-        if mark_ready:
-            await mark_ready()
-        if self.synthesizer.get_synthesizer_config().sentiment_config:
-            await self.update_bot_sentiment()
-        self.active = True
-        if self.synthesizer.get_synthesizer_config().sentiment_config:
-            self.track_bot_sentiment_task = asyncio.create_task(
-                self.track_bot_sentiment()
-            )
-        self.check_for_idle_task = asyncio.create_task(self.check_for_idle())
-        if len(self.events_manager.subscriptions) > 0:
-            self.events_task = asyncio.create_task(self.events_manager.start())
+        if self.agent.get_agent_config().is_agent_enabled == False:
+            try: 
+                    twilio_sid = getattr(self.transcriptions_worker.conversation, "twilio_sid", None)
+                    self.logger.debug(f"Agent off. Transfering call to phone: {self.agent.get_agent_config().phone_number}")
+                    await self.transfer_call(twilio_sid, self.agent.get_agent_config().phone_number)
+            except Exception as e:
+                self.logger.debug(f"No twilio sid Exception: {e}")
+        else:
+            self.agent.start()
+            initial_message = self.agent.get_agent_config().initial_message
+            if initial_message:
+                asyncio.create_task(self.send_initial_message(initial_message))
+            self.agent.attach_transcript(self.transcript)
+            if mark_ready:
+                await mark_ready()
+            if self.synthesizer.get_synthesizer_config().sentiment_config:
+                await self.update_bot_sentiment()
+            self.active = True
+            if self.synthesizer.get_synthesizer_config().sentiment_config:
+                self.track_bot_sentiment_task = asyncio.create_task(
+                    self.track_bot_sentiment()
+                )
+            self.check_for_idle_task = asyncio.create_task(self.check_for_idle())
+            if len(self.events_manager.subscriptions) > 0:
+                self.events_task = asyncio.create_task(self.events_manager.start())
 
     async def send_initial_message(self, initial_message: BaseMessage):
         # TODO: configure if initial message is interruptible

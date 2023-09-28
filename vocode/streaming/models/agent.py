@@ -102,6 +102,8 @@ class ChatGPTAgentConfig(AgentConfig, type=AgentType.CHAT_GPT.value):
     id: Optional[str]
     cache: Optional[Any]
     provider: Optional[str]
+    phone_number: Optional[str]
+    is_agent_enabled: Optional[bool]
 
 
 class ChatAnthropicAgentConfig(AgentConfig, type=AgentType.CHAT_ANTHROPIC.value):
