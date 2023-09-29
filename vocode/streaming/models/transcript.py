@@ -136,16 +136,16 @@ class Transcript(BaseModel):
                 timestamp=timestamp,
             )
         )
-        if self.events_manager is not None:
-            self.events_manager.publish_event(
-                TranscriptEvent(
-                    text=str(action_input.action_config.type),
-                    sender=Sender.BOT,
-                    timestamp=time.time(),
-                    conversation_id=conversation_id,
-                    action=str(action_input.params)
-                )
-            )
+        # if self.events_manager is not None:
+        #     self.events_manager.publish_event(
+        #         TranscriptEvent(
+        #             text=str(action_input.action_config.type),
+        #             sender=Sender.BOT,
+        #             timestamp=time.time(),
+        #             conversation_id=conversation_id,
+        #             action=str(action_input.params)
+        #         )
+        #     )
 
     def add_action_finish_log(
         self,
