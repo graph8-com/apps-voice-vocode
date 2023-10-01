@@ -17,3 +17,4 @@ logfile.txt
 utils/
 token.json
 google_mail_token.json
+dump.rdb

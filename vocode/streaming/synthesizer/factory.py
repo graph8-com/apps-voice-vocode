@@ -11,6 +11,7 @@ from vocode.streaming.models.synthesizer import (
     GoogleSynthesizerConfig,
     PlayHtSynthesizerConfig,
     RimeSynthesizerConfig,
+    PollySynthesizerConfig,
     StreamElementsSynthesizerConfig,
     SynthesizerConfig,
     SynthesizerType,
@@ -23,6 +24,7 @@ from vocode.streaming.synthesizer.gtts_synthesizer import GTTSSynthesizer
 from vocode.streaming.synthesizer.play_ht_synthesizer import PlayHtSynthesizer
 from vocode.streaming.synthesizer.rime_synthesizer import RimeSynthesizer
 from vocode.streaming.synthesizer.bark_synthesizer import BarkSynthesizer
+from vocode.streaming.synthesizer.polly_synthesizer import PollySynthesizer
 from vocode.streaming.synthesizer.stream_elements_synthesizer import (
     StreamElementsSynthesizer,
 )
@@ -71,6 +73,10 @@ class SynthesizerFactory:
         elif isinstance(synthesizer_config, BarkSynthesizerConfig):
             return BarkSynthesizer(
                 synthesizer_config, logger=logger,
+            )
+        elif isinstance(synthesizer_config, PollySynthesizerConfig):
+            return PollySynthesizer(
+                synthesizer_config, logger=logger, aiohttp_session=aiohttp_session
             )
         else:
             raise Exception("Invalid synthesizer config")
