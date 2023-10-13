@@ -9,7 +9,7 @@ from vocode.streaming.models.message import BaseMessage
 from .model import TypedModel, BaseModel
 from .vector_db import VectorDBConfig
 
-FILLER_AUDIO_DEFAULT_SILENCE_THRESHOLD_SECONDS = 0.1
+FILLER_AUDIO_DEFAULT_SILENCE_THRESHOLD_SECONDS = 0.3
 LLM_AGENT_DEFAULT_TEMPERATURE = 0.0
 LLM_AGENT_DEFAULT_MAX_TOKENS = 1500
 LLM_AGENT_DEFAULT_MODEL_NAME = "text-curie-001"

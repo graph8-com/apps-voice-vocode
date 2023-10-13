@@ -153,7 +153,7 @@ class BaseSynthesizer(Generic[SynthesizerConfigType]):
         return FillerAudio(
             message=BaseMessage(text="<typing noise>"),
             audio_data=convert_wav(
-                TYPING_NOISE_PATH2,
+                TYPING_NOISE_PATH,
                 output_sample_rate=self.synthesizer_config.sampling_rate,
                 output_encoding=self.synthesizer_config.audio_encoding,
             ),
