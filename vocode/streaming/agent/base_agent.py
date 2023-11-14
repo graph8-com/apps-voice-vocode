@@ -48,12 +48,14 @@ from vocode.streaming.utils.worker import (
     InterruptibleEventFactory,
     InterruptibleWorker,
 )
+import random
 
 if TYPE_CHECKING:
     from vocode.streaming.utils.state_manager import ConversationStateManager
 
 tracer = trace.get_tracer(__name__)
 AGENT_TRACE_NAME = "agent"
+filler_phrases = ["Hmm...", "Uh-huh...", "Umm...", "Um-hum...", "Mm-hmm...", "Okay...", "I see...", "Got it..."]
 
 
 class AgentInputType(str, Enum):
@@ -210,6 +212,12 @@ class RespondAgent(BaseAgent[AgentConfigType]):
         agent_span_first = tracer.start_span(
             f"{tracer_name_start}.generate_first"  # type: ignore
         )
+        self.produce_interruptible_agent_response_event_nonblocking(
+                AgentResponseMessage(message=BaseMessage(text=random.choice(filler_phrases))),
+                is_interruptible=self.agent_config.allow_agent_to_be_cut_off
+                and True,
+                agent_response_tracker=agent_input.agent_response_tracker,
+            )
         responses = self.generate_response(
             transcription.message,
             is_interrupt=transcription.is_interrupt,
