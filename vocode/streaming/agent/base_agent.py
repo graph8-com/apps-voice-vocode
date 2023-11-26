@@ -61,7 +61,7 @@ call_to_action_keywords = [
             "can i book", "to book", "are you available", "what services",
             "schedule an appointment", "make a reservation", "i'd like to reserve",
             "set up a meeting", "i need to cancel", "change my appointment",
-            "leave a message", "speak with someone", "contact me back", "need assistance", "help with"
+            "leave a message", "speak with someone", "contact me back", "need assistance", "help with", "what time"
         ]
 
 class AgentInputType(str, Enum):
