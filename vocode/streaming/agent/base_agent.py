@@ -55,14 +55,19 @@ if TYPE_CHECKING:
 
 tracer = trace.get_tracer(__name__)
 AGENT_TRACE_NAME = "agent"
-filler_phrases = ["Hmm...", "Uh-huh...", "Umm...", "Um-hum...", "Mm-hmm...", "Okay...", "I see...", "Got it..."]
-
+filler_phrases = ["Uh...", "Uh, ok...", "Umm...", "Um, okay...", "Okay...", "I see, ok..."]
+scheduling_fillers = ["Ok, let me see...", "Sure, let me check...", "Sure, let me see...", "Sure, one sec...", "Ok, one moment...", "Ok sure, um one sec."]
+call_to_action_keywords = [
+            "can i book", "to book", "are you available", "what services",
+            "schedule an appointment", "make a reservation", "i'd like to reserve",
+            "set up a meeting", "i need to cancel", "change my appointment",
+            "leave a message", "speak with someone", "contact me back", "need assistance", "help with"
+        ]
 
 class AgentInputType(str, Enum):
     BASE = "agent_input_base"
     TRANSCRIPTION = "agent_input_transcription"
     ACTION_RESULT = "agent_input_action_result"
-
 
 class AgentInput(TypedModel, type=AgentInputType.BASE.value):
     conversation_id: str
@@ -212,12 +217,20 @@ class RespondAgent(BaseAgent[AgentConfigType]):
         agent_span_first = tracer.start_span(
             f"{tracer_name_start}.generate_first"  # type: ignore
         )
-        self.produce_interruptible_agent_response_event_nonblocking(
-                AgentResponseMessage(message=BaseMessage(text=random.choice(filler_phrases))),
+        if any(phrase in (transcription.message).lower() for phrase in call_to_action_keywords):
+            self.produce_interruptible_agent_response_event_nonblocking(
+                AgentResponseMessage(message=BaseMessage(text=random.choice(scheduling_fillers))),
                 is_interruptible=self.agent_config.allow_agent_to_be_cut_off
                 and True,
                 agent_response_tracker=agent_input.agent_response_tracker,
             )
+        else:
+            self.produce_interruptible_agent_response_event_nonblocking(
+                    AgentResponseMessage(message=BaseMessage(text=random.choice(filler_phrases))),
+                    is_interruptible=self.agent_config.allow_agent_to_be_cut_off
+                    and True,
+                    agent_response_tracker=agent_input.agent_response_tracker,
+                )
         responses = self.generate_response(
             transcription.message,
             is_interrupt=transcription.is_interrupt,
