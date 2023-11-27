@@ -55,7 +55,7 @@ if TYPE_CHECKING:
 
 tracer = trace.get_tracer(__name__)
 AGENT_TRACE_NAME = "agent"
-filler_phrases = ["Uh...", "Uh, ok...", "Umm...", "Um, okay...", "Okay...", "I see, ok..."]
+filler_phrases = ["Uh...", "Uh, ok...", "Umm...", "Um, okay...", "Okay...", "Okay, um...", "Okay, uh..."]
 scheduling_fillers = ["Ok, let me see...", "Sure, let me check...", "Sure, let me see...", "Sure, one sec...", "Ok, one moment...", "Ok sure, um one sec."]
 call_to_action_keywords = [
             "can i book", "to book", "are you available", "what services",
