@@ -184,7 +184,7 @@ class BaseAgent(AbstractAgent[AgentConfigType], InterruptibleWorker):
     
     async def reset_counter(self):
         while True:
-            await asyncio.sleep(3)
+            await asyncio.sleep(6)
             self.filler_counter = 0
             self.logger.debug("Resetting filler counter")
 
