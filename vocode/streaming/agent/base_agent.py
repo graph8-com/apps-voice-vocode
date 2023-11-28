@@ -177,21 +177,16 @@ class BaseAgent(AbstractAgent[AgentConfigType], InterruptibleWorker):
         self.functions = self.get_functions() if self.agent_config.actions else None
         self.is_muted = False
         self.filler_counter = 0
-        self.reset_timer = None
-        self.start_reset_timer()
+        asyncio.create_task(self.reset_counter())
 
     def get_functions(self):
         raise NotImplementedError
     
-    def reset_counter(self):
-        self.counter = 0
-        self.start_reset_timer()
-
-    def start_reset_timer(self):
-        if self.reset_timer:
-            self.reset_timer.cancel()
-        self.reset_timer = threading.Timer(3, self.reset_counter)
-        self.reset_timer.start()
+    async def reset_counter(self):
+        while True:
+            await asyncio.sleep(3)
+            self.filler_counter = 0
+            self.logger.debug("Resetting filler counter")
 
     def attach_transcript(self, transcript: Transcript):
         self.transcript = transcript
