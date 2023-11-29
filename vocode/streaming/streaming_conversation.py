@@ -737,7 +737,6 @@ class StreamingConversation(Generic[OutputDeviceType]):
             # `agent.terminate()` is not async.
             self.logger.debug("Terminating vector db")
             await self.agent.vector_db.tear_down()
-        self.agent.stop_counter_reset_task()
         self.agent.terminate()
         self.logger.debug("Terminating output device")
         self.output_device.terminate()
