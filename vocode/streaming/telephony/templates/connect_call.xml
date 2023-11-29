@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>
+  <Play loop="1">https://www.hifolks.com/audio/tone.mp3</Play>
   <Connect>
-    <Play loop="1">https://www.hifolks.com/audio/tone.mp3</Play>
     <Stream url="wss://{{ base_url }}/connect_call/{{ id }}" />
   </Connect>
 </Response>
