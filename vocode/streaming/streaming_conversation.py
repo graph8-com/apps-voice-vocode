@@ -562,14 +562,35 @@ class StreamingConversation(Generic[OutputDeviceType]):
 
     async def check_for_idle(self):
         """Terminates the conversation after 15 seconds if no activity is detected"""
+        self.idle_counter = 0
+        message = BaseMessage(text="Hello?")
         while self.is_active():
             if time.time() - self.last_action_timestamp > (
                 self.agent.get_agent_config().allowed_idle_time_seconds
                 or ALLOWED_IDLE_TIME
             ):
-                self.logger.debug("Conversation idle for too long, terminating")
-                await self.terminate()
-                return
+                if self.idle_counter < 3:
+                    self.logger.debug("Wake up call")
+                    try:
+                        self.transcriber.mute()
+                        initial_message_tracker = asyncio.Event()
+                        agent_response_event = (
+                            self.interruptible_event_factory.create_interruptible_agent_response_event(
+                                AgentResponseMessage(message=message),
+                                is_interruptible=False,
+                                agent_response_tracker=initial_message_tracker,
+                            )
+                        )
+                        self.agent_responses_worker.consume_nonblocking(agent_response_event)
+                        await initial_message_tracker.wait()
+                        self.transcriber.unmute()
+                    except Exception as e:
+                        self.logger.exception(f"Wake up call exception: {e}")
+                    self.idle_counter += 1
+                else:
+                    self.logger.debug("Conversation idle for too long, terminating")
+                    await self.terminate()
+                    return
             await asyncio.sleep(15)
 
     async def track_bot_sentiment(self):

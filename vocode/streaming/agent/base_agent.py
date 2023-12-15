@@ -49,7 +49,7 @@ from vocode.streaming.utils.worker import (
     InterruptibleWorker,
 )
 import random
-import threading
+import time
 
 if TYPE_CHECKING:
     from vocode.streaming.utils.state_manager import ConversationStateManager
@@ -177,16 +177,7 @@ class BaseAgent(AbstractAgent[AgentConfigType], InterruptibleWorker):
         self.functions = self.get_functions() if self.agent_config.actions else None
         self.is_muted = False
         self.has_played_filler_audio = False
-
-    async def filler_reset(self):
-        await asyncio.sleep(5)
-        self.has_played_filler_audio = False
-        self.logger.debug("Filler audio enabled")
-
-    def update_filler_handler(self):
-        if self.has_played_filler_audio == False:
-            self.has_played_filler_audio = True
-            asyncio.create_task(self.filler_reset())
+        self.last_played_time = None
 
     def attach_transcript(self, transcript: Transcript):
         self.transcript = transcript
@@ -226,22 +217,22 @@ class RespondAgent(BaseAgent[AgentConfigType]):
         agent_span_first = tracer.start_span(
             f"{tracer_name_start}.generate_first"  # type: ignore
         )
-        if not self.has_played_filler_audio:
-            if any(phrase in (transcription.message).lower() for phrase in call_to_action_keywords):
-                self.produce_interruptible_agent_response_event_nonblocking(
-                    AgentResponseMessage(message=BaseMessage(text=random.choice(scheduling_fillers))),
-                    is_interruptible=self.agent_config.allow_agent_to_be_cut_off
-                    and True,
-                    agent_response_tracker=agent_input.agent_response_tracker,
-                )
-                self.update_filler_handler()
-            else:
+        if self.last_played_time is None or time.time() - self.last_played_time >= 6:
+            try:
+                previous_message = self.transcript.event_logs[-2].text
                 self.produce_interruptible_agent_response_event_nonblocking(
                         AgentResponseMessage(message=BaseMessage(text=random.choice(filler_phrases))),
                         is_interruptible=self.agent_config.allow_agent_to_be_cut_off and True,
                         agent_response_tracker=agent_input.agent_response_tracker,
                     )
-                self.update_filler_handler()
+            except AttributeError:
+               self.produce_interruptible_agent_response_event_nonblocking(
+                    AgentResponseMessage(message=BaseMessage(text=random.choice(scheduling_fillers))),
+                    is_interruptible=self.agent_config.allow_agent_to_be_cut_off
+                    and True,
+                    agent_response_tracker=agent_input.agent_response_tracker,
+                )
+        self.last_played_time = time.time()
         responses = self.generate_response(
             transcription.message,
             is_interrupt=transcription.is_interrupt,

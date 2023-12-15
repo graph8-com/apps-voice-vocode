@@ -104,6 +104,8 @@ class DeepgramTranscriber(BaseAsyncTranscriber[DeepgramTranscriberConfig]):
             "sample_rate": self.transcriber_config.sampling_rate,
             "channels": 1,
             "interim_results": "true",
+            "endpointing": 400,
+            "utterance_end_ms": 1000
         }
         extra_params = {}
         if self.transcriber_config.language:
@@ -204,8 +206,18 @@ class DeepgramTranscriber(BaseAsyncTranscriber[DeepgramTranscriberConfig]):
                         self.logger.debug(f"Got error {e} in Deepgram receiver")
                         break
                     data = json.loads(msg)
-                    if (
-                        not "is_final" in data
+                    if "channel" not in data:
+                        if not buffer:
+                            continue
+                        self.output_queue.put_nowait(
+                            Transcription(
+                                message=buffer, confidence=1.0, is_final=True
+                            )
+                        )
+                        buffer = ""
+                        continue
+                    elif (
+                        not "is_final" in data and not data["type"] == "UtteranceEnd"
                     ):  # means we've finished receiving transcriptions
                         break
                     cur_max_latency = self.audio_cursor - transcript_cursor
