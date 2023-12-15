@@ -57,7 +57,7 @@ if TYPE_CHECKING:
 tracer = trace.get_tracer(__name__)
 AGENT_TRACE_NAME = "agent"
 filler_phrases = ["Uh...", "Uh, ok...", "Umm...", "Um, okay...", "Okay...", "Okay, um...", "Okay, uh..."]
-scheduling_fillers = ["Ok, let me see...", "Sure, let me check...", "Sure, let me see...", "Sure, one sec...", "Ok, one moment...", "Ok sure, um one sec."]
+scheduling_fillers = ["Let me see...", "Let me check...", "One sec...", "Just a moment...", "Just a second..."]
 call_to_action_keywords = [
             "can i book", "to book", "are you available", "what services",
             "schedule an appointment", "make a reservation", "i'd like to reserve",
@@ -217,7 +217,7 @@ class RespondAgent(BaseAgent[AgentConfigType]):
         agent_span_first = tracer.start_span(
             f"{tracer_name_start}.generate_first"  # type: ignore
         )
-        if self.last_played_time is None or time.time() - self.last_played_time >= 6:
+        if self.last_played_time is None or time.time() - self.last_played_time >= 7:
             try:
                 previous_message = self.transcript.event_logs[-2].text
                 self.produce_interruptible_agent_response_event_nonblocking(
