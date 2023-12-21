@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Optional
 from vocode.streaming.models.model import TypedModel
+from vocode.streaming.models.agent import AgentConfig
 
 
 class Sender(str, Enum):
@@ -26,6 +27,7 @@ class Event(TypedModel):
 class PhoneCallConnectedEvent(Event, type=EventType.PHONE_CALL_CONNECTED):
     to_phone_number: str
     from_phone_number: str
+    agent_config: AgentConfig
 
 
 class PhoneCallEndedEvent(Event, type=EventType.PHONE_CALL_ENDED):

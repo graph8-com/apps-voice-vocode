@@ -78,6 +78,7 @@ class TwilioCall(Call[TwilioOutputDevice]):
             base_url=base_url, twilio_config=self.twilio_config
         )
         self.twilio_sid = twilio_sid
+        self.agent_config = agent_config
         self.latest_media_timestamp = 0
 
     def create_state_manager(self) -> TwilioCallStateManager:
@@ -113,6 +114,7 @@ class TwilioCall(Call[TwilioOutputDevice]):
                     conversation_id=self.id,
                     to_phone_number=self.to_phone,
                     from_phone_number=self.from_phone,
+                    agent_config=self.agent_config,
                 )
             )
             while self.active:
