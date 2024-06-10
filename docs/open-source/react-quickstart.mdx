@@ -56,7 +56,9 @@ uvicorn main:app --port 3000
 
 You now have a server with a Vocode websocket route at localhost:3000! You can now use the `useConversation` hook with your self-hosted backend as follows:
 
-```javascript
+```typescript
+import { useConversation } from "vocode";
+
 const { status, start, stop, error, analyserNode } = useConversation({
   backendUrl: "<YOUR_BACKEND_URL>", // looks like ws://localhost:3000/conversation or wss://asdf1234.ngrok.app/conversation if using ngrok
   audioDeviceConfig: {},
@@ -65,14 +67,14 @@ const { status, start, stop, error, analyserNode } = useConversation({
 
 Use the `status`, `start`, and `stop` objects within your React components to control conversations with your self-hosted backend, e.g.
 
-```
+```jsx
 <>
-{status === "idle" && <p>Press me to talk!</p>}
-{status == "error" && error && <p>{error.message}</p>}
+  {status === "idle" && <p>Press me to talk!</p>}
+  {status == "error" && error && <p>{error.message}</p>}
 
-<button
-  disabled={["connecting"].includes(status)}
-  onClick={status === "connected" ? stop : start}
-></button>
+  <button
+    disabled={["connecting"].includes(status)}
+    onClick={status === "connected" ? stop : start}
+  ></button>
 </>
 ```
