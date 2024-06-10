@@ -35,10 +35,11 @@ class MyAgentFactory(AbstractAgentFactory):
 Then, in your app, you can connect the agent to the app:
 
 ```python
+from vocode.streaming.telephony.server.base import TelephonyServer
+from vocode.streaming.agent.my_agent_factory import MyAgentFactory
 
 telephony_server = TelephonyServer(
-    agent_factory=MyAgentFactory(
-        agent_config=agent_config, action_factory=action_factory),
+    agent_factory=MyAgentFactory()
     ...
 )
 ```
