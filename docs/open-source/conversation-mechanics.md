@@ -43,7 +43,7 @@ Stay tuned, more dials to come here soon!
 
 The amount of time the bot waits inversely scales with the `conversation_speed` value. So a bot with `conversation_speed` of 2 responds in half the time compared to a `conversation_speed` of 1. Likewise a `conversation_speed` of 0.5 means the bot takes twice as long to respond.
 
-```
+```python
 conversation = StreamingConversation(
     speed_coefficient=2
     ...
