@@ -6,7 +6,7 @@ description: 'Activate actions with function calls or specific phrases'
 [Function calls](https://platform.openai.com/docs/guides/function-calling) allow modern Large Language Models (LLMs) like ChatGPT to perform tasks outside of text generation. 
 For example, if I create a math assistant with ChatGPT, I might make a "multiply" function that ChatGPT can call to multiply two numbers together.
 
-If you add an action to a vocode agent, it is automatically added to each ChatGPT query. If the function call is outputted by ChatGPT, the corresponding action is triggered automatically.
+If you add an action to a vocode agent, its corresponding function calling schema is added to each ChatGPT query. If the function call is outputted by ChatGPT, the corresponding action is triggered automatically.
 
 ***Note:*** *In vocode agents, ChatGPT can return a text response alongside a function call. In this scenario, the text is synthesized and played first, then the action is run.*
 
@@ -32,6 +32,7 @@ EndConversationVocodeActionConfig(
 ***Note:*** *You can also leave `action_trigger` field empty and vocode will default to function calls.*
 
 **Phrase triggers:**
+
 ```python
 from vocode.streaming.action.end_conversation import EndConversationVocodeActionConfig
 from vocode.streaming.models.actions import PhraseBasedActionTrigger, PhraseBasedActionTriggerConfig, PhraseTrigger
@@ -52,7 +53,11 @@ EndConversationVocodeActionConfig(
     )
 )
 ```
-As demonstrated above, you can add multiple phrase triggers for an action by passing a list of `PhraseTrigger` instances.
+For the code above, if the agent says 'Ending conversation now', the end conversation action will automatically be taken. 
+You can add multiple phrase triggers for an action by passing a list of `PhraseTrigger` instances. 
+
+The `phrase_condition_type_contains` condition configures the agent to run the action if its output *contains* the phrase. So, the action will also be run if the agent
+says 'I am ending conversation now'.
 
 ## Example Scenario
 
