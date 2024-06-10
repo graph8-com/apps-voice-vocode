@@ -50,7 +50,7 @@ The method hardcodes some values like the `sampling_rate` and `audio_encoding` f
 
 You can try out our experimental implementation of ElevenLabs' [input streaming API](https://elevenlabs.io/docs/api-reference/websockets) by passing in `experimental_websocket=True` into the config and using the `ElevenLabsWSSynthesizer`, like:
 
-```
+```python
 from vocode.streaming.synthesizer.eleven_labs_websocket_synthesizer import ElevenLabsWSSynthesizer
 from vocode.streaming.models.synthesizer import ElevenLabsSynthesizerConfig
 
@@ -74,7 +74,7 @@ synthesizer=ElevenLabsWSSynthesizer(ElevenLabsSynthesizerConfig.from_output_devi
 
 We now support Play.ht's new [gRPC streaming API](https://docs.play.ht/reference/python-sdk-audio-streaming), which runs much faster than their HTTP API and is designed for realtime communication.
 
-```
+```python
 ...
 synthesizer_config=PlayHtSynthesizerConfig.from_telephone_output_device(
     api_key=os.getenv("PLAY_HT_API_KEY"),
