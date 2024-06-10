@@ -39,7 +39,7 @@ from vocode.streaming.telephony.server.base import TelephonyServer
 from vocode.streaming.agent.my_agent_factory import MyAgentFactory
 
 telephony_server = TelephonyServer(
-    agent_factory=MyAgentFactory()
+    agent_factory=MyAgentFactory(action_factory=action_factory)
     ...
 )
 ```
