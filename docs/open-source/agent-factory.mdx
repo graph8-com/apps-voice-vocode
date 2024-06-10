@@ -13,6 +13,7 @@ First define your `AgentFactory`. In this example, we are creating a factory for
 
 ```python
 from vocode.streaming.agent.abstract_factory import AbstractAgentFactory
+from vocode.streaming.action.my_action_factory import MyActionFactory
 
 class MyAgentFactory(AbstractAgentFactory):
     def __init__(self, action_factory: MyActionFactory):
@@ -37,9 +38,10 @@ Then, in your app, you can connect the agent to the app:
 ```python
 from vocode.streaming.telephony.server.base import TelephonyServer
 from vocode.streaming.agent.my_agent_factory import MyAgentFactory
+from vocode.streaming.action.my_action_factory import MyActionFactory
 
 telephony_server = TelephonyServer(
-    agent_factory=MyAgentFactory(action_factory=action_factory)
+    agent_factory=MyAgentFactory(action_factory=MyActionFactory())
     ...
 )
 ```
