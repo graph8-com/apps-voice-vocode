@@ -50,8 +50,8 @@ class TwilioClient(AbstractTelephonyClient):
             "Twiml": self.get_connection_twiml(conversation_id=conversation_id).body.decode(
                 "utf-8"
             ),
-            "To": f"+{to_phone}",
-            "From": f"+{from_phone}",
+            "To": f"{to_phone}",
+            "From": f"{from_phone}",
             **(telephony_params or {}),
         }
         if digits:
