@@ -54,6 +54,11 @@ class TwilioClient(AbstractTelephonyClient):
             "From": f"{from_phone}",
             **(telephony_params or {}),
         }
+
+        # Add extra_params from TwilioConfig
+        if self.twilio_config.extra_params:
+            data.update(self.twilio_config.extra_params)
+
         if digits:
             data["SendDigits"] = digits
         async with AsyncRequestor().get_session().post(
