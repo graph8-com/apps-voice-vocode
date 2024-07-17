@@ -99,6 +99,7 @@ class VonagePhoneConversation(AbstractPhoneConversation[VonageOutputDevice]):
                 conversation_id=self.id,
                 to_phone_number=self.to_phone,
                 from_phone_number=self.from_phone,
+                twilio_sid=None,
             )
         )
         disconnected = False
