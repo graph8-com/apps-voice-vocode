@@ -123,6 +123,7 @@ class OutboundCall:
         else:
             raise ValueError("Unknown telephony client")
         await self.config_manager.save_config(self.conversation_id, call_config)
+        return self.conversation_id
 
     async def end(self):
         return await self.telephony_client.end_call(self.telephony_id)
