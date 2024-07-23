@@ -18,13 +18,15 @@ class CartesiaSynthesizer(BaseSynthesizer[CartesiaSynthesizerConfig]):
         try:
             from cartesia import AsyncCartesia
         except ImportError as e:
-            raise ImportError(f"Missing required dependancies for CartesiaSynthesizer") from e
-
-        self.cartesia_tts = AsyncCartesiaTTS
+            raise ImportError("Missing required dependancies for CartesiaSynthesizer") from e
 
         self.api_key = synthesizer_config.api_key or getenv("CARTESIA_API_KEY")
         if not self.api_key:
             raise ValueError("Missing Cartesia API key")
+
+        self.cartesia_tts = AsyncCartesia
+
+        self._experimental_voice_controls = synthesizer_config._experimental_voice_controls
 
         if synthesizer_config.audio_encoding == AudioEncoding.LINEAR16:
             match synthesizer_config.sampling_rate:
@@ -79,7 +81,14 @@ class CartesiaSynthesizer(BaseSynthesizer[CartesiaSynthesizerConfig]):
         self.model_id = synthesizer_config.model_id
         self.voice_id = synthesizer_config.voice_id
         self.client = self.cartesia_tts(api_key=self.api_key)
-        self.voice_embedding = self.client.get_voice_embedding(voice_id=self.voice_id)
+        self.ws = None
+        self.ctx = None
+
+    async def initialize_ws(self):
+        if self.ws is None:
+            self.ws = await self.client.tts.websocket()
+        if self.ctx is None or self.ctx.is_closed():
+            self.ctx = self.ws.context()
 
     async def create_speech_uncached(
         self,
@@ -88,32 +97,47 @@ class CartesiaSynthesizer(BaseSynthesizer[CartesiaSynthesizerConfig]):
         is_first_text_chunk: bool = False,
         is_sole_text_chunk: bool = False,
     ) -> SynthesisResult:
-        generator = await self.client.generate(
-            transcript=message.text,
-            voice=self.voice_embedding,
-            stream=True,
-            model_id=self.model_id,
-            data_rtype="bytes",
-            output_format=self.output_format,
+        await self.initialize_ws()
+
+        if is_first_text_chunk and self.ws and self.ctx:
+            await self.ctx.no_more_inputs()
+            self.ctx = self.ws.context()
+
+        transcript = message.text
+
+        if not message.text.endswith(" "):
+            transcript = message.text + " "
+
+        if self.ctx is not None:
+            await self.ctx.send(
+                model_id=self.model_id,
+                transcript=transcript,
+                voice_id=self.voice_id,
+                continue_=not is_sole_text_chunk,
+                output_format=self.output_format,
+                _experimental_voice_controls=self._experimental_voice_controls,
+            )
+
+        async def chunk_generator(context):
+            buffer = bytearray()
+            if context.is_closed():
+                return
+            async for event in context.receive():
+                audio = event.get("audio")
+                buffer.extend(audio)
+                while len(buffer) >= chunk_size:
+                    yield SynthesisResult.ChunkResult(
+                        chunk=buffer[:chunk_size], is_last_chunk=False
+                    )
+                    buffer = buffer[chunk_size:]
+            yield SynthesisResult.ChunkResult(chunk=buffer, is_last_chunk=True)
+
+        return SynthesisResult(
+            chunk_generator=chunk_generator(self.ctx),
+            get_message_up_to=lambda seconds: self.get_message_cutoff_from_voice_speed(
+                message, seconds
+            ),
         )
-
-        audio_file = io.BytesIO()
-        with wave.open(audio_file, "wb") as wav_file:
-            wav_file.setnchannels(self.num_channels)
-            wav_file.setsampwidth(self.channel_width)
-            wav_file.setframerate(self.sampling_rate)
-            async for chunk in generator:
-                wav_file.writeframes(chunk["audio"])
-        audio_file.seek(0)
-
-        result = self.create_synthesis_result_from_wav(
-            synthesizer_config=self.synthesizer_config,
-            file=audio_file,
-            message=message,
-            chunk_size=chunk_size,
-        )
-
-        return result
 
     @classmethod
     def get_voice_identifier(cls, synthesizer_config: CartesiaSynthesizerConfig):
@@ -127,3 +151,10 @@ class CartesiaSynthesizer(BaseSynthesizer[CartesiaSynthesizerConfig]):
                 synthesizer_config.audio_encoding,
             )
         )
+
+    async def tear_down(self):
+        await super().tear_down()
+        if self.ctx:
+            self.ctx._close()
+        await self.ws.close()
+        await self.client.close()
