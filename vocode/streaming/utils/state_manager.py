@@ -1,3 +1,4 @@
+import asyncio
 from typing import TYPE_CHECKING, Optional
 
 from vocode.streaming.models.transcriber import EndpointingConfig
@@ -56,6 +57,9 @@ class AbstractConversationStateManager:
     def get_conversation_id(self):
         raise NotImplementedError
 
+    def synthesize_voicemail(self):
+        raise NotImplementedError
+
 
 class AbstractPhoneConversationStateManager(AbstractConversationStateManager):
     def get_config_manager(self):
@@ -107,6 +111,22 @@ class ConversationStateManager(AbstractConversationStateManager):
 
     async def terminate_conversation(self):
         self._conversation.mark_terminated()
+
+    def synthesize_voicemail(self, message: str) -> asyncio.Event:
+        from vocode.streaming.models.message import BaseMessage
+        from vocode.streaming.agent.base_agent import AgentResponseMessage
+
+        completion_event = asyncio.Event()
+
+        self._conversation.agent.agent_responses_consumer.consume_nonblocking(
+            self._conversation.agent.interruptible_event_factory.create_interruptible_agent_response_event(
+                AgentResponseMessage(message=BaseMessage(text=message)),
+                is_interruptible=False,
+                agent_response_tracker=completion_event,
+            )
+        )
+
+        return completion_event
 
     def set_call_check_for_idle_paused(self, value: bool):
         if not self._conversation:
