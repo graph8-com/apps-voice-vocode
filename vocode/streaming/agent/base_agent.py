@@ -30,6 +30,7 @@ from vocode.streaming.action.phone_call_action import (
     TwilioPhoneConversationAction,
     VonagePhoneConversationAction,
 )
+from vocode.streaming.action.wait import WaitResponse, WaitVocodeActionConfig
 from vocode.streaming.agent.goodbye import is_goodbye_simple
 from vocode.streaming.agent.phrase_trigger import matches_phrase_trigger
 from vocode.streaming.models.actions import (
@@ -39,7 +40,6 @@ from vocode.streaming.models.actions import (
     EndOfTurn,
     FunctionCall,
 )
-from vocode.streaming.action.wait import WaitResponse, WaitVocodeActionConfig
 from vocode.streaming.models.agent import AgentConfig, ChatGPTAgentConfig, LLMAgentConfig
 from vocode.streaming.models.events import Sender
 from vocode.streaming.models.message import BaseMessage, BotBackchannel, SilenceMessage

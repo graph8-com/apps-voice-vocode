@@ -25,6 +25,7 @@ from loguru import logger
 from sentry_sdk.tracing import Span
 
 from vocode import conversation_id as ctx_conversation_id
+from vocode.streaming.action.wait import WaitResponse
 from vocode.streaming.action.worker import ActionsWorker
 from vocode.streaming.agent.base_agent import (
     AgentInput,
@@ -42,7 +43,6 @@ from vocode.streaming.constants import (
     TEXT_TO_SPEECH_CHUNK_SIZE_SECONDS,
 )
 from vocode.streaming.models.actions import EndOfTurn
-from vocode.streaming.action.wait import WaitResponse
 from vocode.streaming.models.agent import FillerAudioConfig
 from vocode.streaming.models.events import Sender
 from vocode.streaming.models.message import BaseMessage, BotBackchannel, LLMToken, SilenceMessage

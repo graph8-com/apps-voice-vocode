@@ -113,8 +113,8 @@ class ConversationStateManager(AbstractConversationStateManager):
         self._conversation.mark_terminated()
 
     def synthesize_voicemail(self, message: str) -> asyncio.Event:
-        from vocode.streaming.models.message import BaseMessage
         from vocode.streaming.agent.base_agent import AgentResponseMessage
+        from vocode.streaming.models.message import BaseMessage
 
         completion_event = asyncio.Event()
 
