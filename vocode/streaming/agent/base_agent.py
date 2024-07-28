@@ -5,7 +5,7 @@ import json
 import random
 import typing
 from enum import Enum
-from typing import TYPE_CHECKING, AsyncGenerator, Dict, Generic, Optional, Tuple, TypeVar, Union
+from typing import TYPE_CHECKING, AsyncGenerator, Dict, Generic, Optional, Tuple, TypeVar, Union, cast
 
 import sentry_sdk
 from loguru import logger
@@ -29,6 +29,7 @@ from vocode.streaming.models.actions import (
     EndOfTurn,
     FunctionCall,
 )
+from vocode.streaming.action.wait import WaitResponse, WaitVocodeActionConfig
 from vocode.streaming.models.agent import AgentConfig, ChatGPTAgentConfig, LLMAgentConfig
 from vocode.streaming.models.events import Sender
 from vocode.streaming.models.message import BaseMessage, BotBackchannel, SilenceMessage
@@ -501,6 +502,21 @@ class RespondAgent(BaseAgent[AgentConfigType]):
                     agent_response_tracker=user_message_tracker,
                 )
             )
+        if function_call.name == "action_wait":
+            action_config = cast(WaitVocodeActionConfig, action_config)
+            self.agent_responses_consumer.consume_nonblocking(
+                self.interruptible_event_factory.create_interruptible_agent_response_event(
+                    WaitResponse(seconds=action_config.seconds),
+                    is_interruptible=action.is_interruptible,
+                )
+            )
+            self.agent_responses_consumer.consume_nonblocking(
+                self.interruptible_event_factory.create_interruptible_agent_response_event(
+                    AgentResponseMessage(message=EndOfTurn()),
+                    agent_response_tracker=user_message_tracker,
+                )
+            )
+
         action_input = self.create_action_input(action, agent_input, params, user_message_tracker)
         self.enqueue_action_input(action, action_input, agent_input.conversation_id)
 

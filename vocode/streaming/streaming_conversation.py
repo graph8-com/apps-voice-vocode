@@ -42,6 +42,7 @@ from vocode.streaming.constants import (
     TEXT_TO_SPEECH_CHUNK_SIZE_SECONDS,
 )
 from vocode.streaming.models.actions import EndOfTurn
+from vocode.streaming.action.wait import WaitResponse
 from vocode.streaming.models.agent import FillerAudioConfig
 from vocode.streaming.models.events import Sender
 from vocode.streaming.models.message import BaseMessage, BotBackchannel, LLMToken, SilenceMessage
@@ -418,6 +419,10 @@ class StreamingConversation(AudioPipeline[OutputDeviceType]):
                     item.agent_response_tracker.set()
                     self.conversation.mark_terminated(bot_disconnect=True)
                     return
+                if isinstance(agent_response, WaitResponse):
+                    logger.debug(f"Agent requested to wait")
+                    self.conversation.schedule_action_on_idle(agent_response.seconds)
+                    return
 
                 agent_response_message = typing.cast(AgentResponseMessage, agent_response)
 
@@ -438,6 +443,8 @@ class StreamingConversation(AudioPipeline[OutputDeviceType]):
                     )
                     self.is_first_text_chunk = True
                     return
+                else:
+                    self.conversation.cancel_wait_idle_task()
 
                 synthesizer_base_name: Optional[str] = (
                     synthesizer_base_name_if_should_report_to_sentry(self.conversation.synthesizer)
@@ -667,6 +674,7 @@ class StreamingConversation(AudioPipeline[OutputDeviceType]):
 
         self.check_for_idle_task: Optional[asyncio.Task] = None
         self.check_for_idle_paused = False
+        self.wait_idle_task: Optional[asyncio.Task] = None
 
         self.current_transcription_is_interrupt: bool = False
 
@@ -771,7 +779,33 @@ class StreamingConversation(AudioPipeline[OutputDeviceType]):
                 )
                 check_human_present_count += 1
             # wait till the idle time would have passed the threshold if no action occurs
-            await asyncio.sleep(ALLOWED_IDLE_TIME)
+            await asyncio.sleep(self.idle_time_threshold)
+
+    def cancel_wait_idle_task(self):
+        """
+        Cancels the current wait_idle_task if it exists.
+        """
+        if self.wait_idle_task:
+            self.check_for_idle_paused = False
+            self.wait_idle_task.cancel()
+            self.wait_idle_task = None
+
+    def schedule_action_on_idle(self, seconds: int):
+        """
+        Schedules action_on_idle to be executed after N seconds.
+        Cancels any existing scheduled task before creating a new one.
+
+        Args:
+            seconds (int): The number of seconds to wait before executing action_on_idle.
+        """
+        self.cancel_wait_idle_task()
+
+        async def delayed_action_on_idle():
+            await asyncio.sleep(seconds)
+            await self.action_on_idle()
+
+        self.check_for_idle_paused = True
+        self.wait_idle_task = asyncio.create_task(delayed_action_on_idle())
 
     async def send_single_message(
         self,
