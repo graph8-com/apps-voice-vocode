@@ -5,7 +5,17 @@ import json
 import random
 import typing
 from enum import Enum
-from typing import TYPE_CHECKING, AsyncGenerator, Dict, Generic, Optional, Tuple, TypeVar, Union, cast
+from typing import (
+    TYPE_CHECKING,
+    AsyncGenerator,
+    Dict,
+    Generic,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+)
 
 import sentry_sdk
 from loguru import logger
