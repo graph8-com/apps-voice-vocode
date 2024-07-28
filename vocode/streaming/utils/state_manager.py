@@ -57,7 +57,7 @@ class AbstractConversationStateManager:
     def get_conversation_id(self):
         raise NotImplementedError
 
-    def synthesize_voicemail(self):
+    def synthesize_voicemail(self) -> asyncio.Event:
         raise NotImplementedError
 
 
