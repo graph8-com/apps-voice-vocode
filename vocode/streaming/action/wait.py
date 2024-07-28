@@ -31,8 +31,8 @@ class Wait(
     ]
 ):
     description: str = (
-        "Call this function if a HUMAN requests a pause in the conversation, "
-        "such as asking to wait or indicating they'll be back shortly. Do not use this for "
+        "Call this function immediately if the person you're talking to asks for a pause in the conversation, "
+        "such as asking you to wait or indicating they'll be back shortly. Do not use this for "
         "automated messages, answering machines, or any non-human requests for waiting. "
     )
     parameters_type: Type[WaitParameters] = WaitParameters
