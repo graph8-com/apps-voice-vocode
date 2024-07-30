@@ -1,12 +1,15 @@
+import asyncio
 import hashlib
-import io
-import wave
+from typing import Optional
+
+from loguru import logger
 
 from vocode import getenv
 from vocode.streaming.models.audio import AudioEncoding, SamplingRate
 from vocode.streaming.models.message import BaseMessage
 from vocode.streaming.models.synthesizer import CartesiaSynthesizerConfig
 from vocode.streaming.synthesizer.base_synthesizer import BaseSynthesizer, SynthesisResult
+from vocode.streaming.utils.create_task import asyncio_create_task
 
 
 class CartesiaSSE(BaseSynthesizer[CartesiaSynthesizerConfig]):
@@ -75,6 +78,7 @@ class CartesiaSSE(BaseSynthesizer[CartesiaSynthesizerConfig]):
         self.model_id = synthesizer_config.model_id
         self.voice_id = synthesizer_config.voice_id
         self.client = self.cartesia_tts(api_key=self.api_key)
+        self.voice_embedding = self.client.voices.get(id=self.voice_id)["embedding"]
 
     async def create_speech_uncached(
         self,
@@ -83,6 +87,19 @@ class CartesiaSSE(BaseSynthesizer[CartesiaSynthesizerConfig]):
         is_first_text_chunk: bool = False,
         is_sole_text_chunk: bool = False,
     ) -> SynthesisResult:
+        chunk_queue: asyncio.Queue[Optional[bytes]] = asyncio.Queue()
+        asyncio_create_task(
+            self.process_chunks(message, chunk_size, chunk_queue),
+        )
+
+        return SynthesisResult(
+            self.chunk_result_generator_from_queue(chunk_queue),
+            lambda seconds: self.get_message_cutoff_from_voice_speed(message, seconds),
+        )
+
+    async def process_chunks(
+        self, message: BaseMessage, chunk_size: int, chunk_queue: asyncio.Queue[Optional[bytes]]
+    ):
         try:
             generator = await self.client.tts.sse(
                 model_id=self.model_id,
@@ -91,31 +108,31 @@ class CartesiaSSE(BaseSynthesizer[CartesiaSynthesizerConfig]):
                 stream=True,
                 output_format=self.output_format,
             )
-        except Exception as e:
-            print(e)
 
-        async def chunk_generator(sse):
             buffer = bytearray()
-            try:
-                async for event in sse:
-                    audio = event.get("audio")
-                    buffer.extend(audio)
-                    while len(buffer) >= chunk_size:
-                        yield SynthesisResult.ChunkResult(
-                            chunk=buffer[:chunk_size], is_last_chunk=False
-                        )
-                        buffer = buffer[chunk_size:]
-            except Exception as e:
-                print(f"Caught error while receiving audio chunks from CartesiaSynthesizer: {e}")
-            if buffer:
-                yield SynthesisResult.ChunkResult(chunk=buffer, is_last_chunk=True)
+            async for event in generator:
+                audio = event.get("audio")
+                buffer.extend(audio)
+                while len(buffer) >= chunk_size:
+                    chunk_queue.put_nowait(bytes(buffer[:chunk_size]))
+                    buffer = buffer[chunk_size:]
 
-        return SynthesisResult(
-            chunk_generator=chunk_generator(generator),
-            get_message_up_to=lambda seconds: self.get_message_cutoff_from_voice_speed(
-                message, seconds
-            ),
-        )
+            if buffer:
+                chunk_queue.put_nowait(bytes(buffer))
+        except Exception as e:
+            logger.debug(
+                f"Caught error while processing audio chunks from CartesiaSynthesizer: {e}"
+            )
+        finally:
+            chunk_queue.put_nowait(None)  # Sentinel to indicate end of stream
+
+    async def chunk_result_generator_from_queue(self, chunk_queue: asyncio.Queue[Optional[bytes]]):
+        while True:
+            chunk = await chunk_queue.get()
+            if chunk is None:
+                break
+            yield SynthesisResult.ChunkResult(chunk=chunk, is_last_chunk=False)
+        yield SynthesisResult.ChunkResult(chunk=b"", is_last_chunk=True)
 
     @classmethod
     def get_voice_identifier(cls, synthesizer_config: CartesiaSynthesizerConfig):
