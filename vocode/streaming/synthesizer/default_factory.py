@@ -13,6 +13,7 @@ from vocode.streaming.synthesizer.abstract_factory import AbstractSynthesizerFac
 from vocode.streaming.synthesizer.azure_synthesizer import AzureSynthesizer
 from vocode.streaming.synthesizer.base_synthesizer import BaseSynthesizer
 from vocode.streaming.synthesizer.cartesia_synthesizer import CartesiaSynthesizer
+from vocode.streaming.synthesizer.cartesia_sse import CartesiaSSE
 from vocode.streaming.synthesizer.eleven_labs_synthesizer import ElevenLabsSynthesizer
 from vocode.streaming.synthesizer.eleven_labs_websocket_synthesizer import ElevenLabsWSSynthesizer
 from vocode.streaming.synthesizer.play_ht_synthesizer import PlayHtSynthesizer
@@ -29,6 +30,8 @@ class DefaultSynthesizerFactory(AbstractSynthesizerFactory):
         if isinstance(synthesizer_config, AzureSynthesizerConfig):
             return AzureSynthesizer(synthesizer_config)
         elif isinstance(synthesizer_config, CartesiaSynthesizerConfig):
+            if not synthesizer_config.use_sse:
+                return CartesiaSSE(synthesizer_config)
             return CartesiaSynthesizer(synthesizer_config)
         elif isinstance(synthesizer_config, ElevenLabsSynthesizerConfig):
             eleven_labs_synthesizer_class_type: Type[BaseSynthesizer] = ElevenLabsSynthesizer
