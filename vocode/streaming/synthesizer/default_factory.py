@@ -30,7 +30,7 @@ class DefaultSynthesizerFactory(AbstractSynthesizerFactory):
         if isinstance(synthesizer_config, AzureSynthesizerConfig):
             return AzureSynthesizer(synthesizer_config)
         elif isinstance(synthesizer_config, CartesiaSynthesizerConfig):
-            if not synthesizer_config.use_sse:
+            if synthesizer_config.use_sse:
                 return CartesiaSSE(synthesizer_config)
             return CartesiaSynthesizer(synthesizer_config)
         elif isinstance(synthesizer_config, ElevenLabsSynthesizerConfig):
