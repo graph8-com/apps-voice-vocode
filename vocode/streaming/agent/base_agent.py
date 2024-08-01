@@ -45,7 +45,7 @@ from vocode.streaming.models.events import Sender
 from vocode.streaming.models.message import BaseMessage, BotBackchannel, SilenceMessage
 from vocode.streaming.models.model import TypedModel
 from vocode.streaming.models.transcriber import Transcription
-from vocode.streaming.models.transcript import Message, Transcript
+from vocode.streaming.models.transcript import ActionFinish, ActionStart, Message, Transcript
 from vocode.streaming.utils import unrepeating_randomizer
 from vocode.streaming.utils.speed_manager import SpeedManager
 from vocode.streaming.utils.worker import (
@@ -412,9 +412,15 @@ class RespondAgent(BaseAgent[AgentConfigType]):
                     action_output=agent_input.action_output,
                     conversation_id=agent_input.conversation_id,
                 )
-                if agent_input.is_quiet:
+                if agent_input.is_quiet or (
+                    len(self.transcript.event_logs) >= 2
+                    and isinstance(self.transcript.event_logs[-2], ActionFinish)
+                    and isinstance(self.transcript.event_logs[-1], ActionStart)
+                ):
                     # Do not generate a response to quiet actions
-                    logger.debug("Action is quiet, skipping response generation")
+                    logger.debug(
+                        "Action is quiet or two functions were called consecutively, skipping response generation"
+                    )
                     return
                 if agent_input.action_output.canned_response is not None:
                     self.agent_responses_consumer.consume_nonblocking(
