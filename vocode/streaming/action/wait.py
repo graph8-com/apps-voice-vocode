@@ -55,7 +55,7 @@ class Wait(
         super().__init__(
             action_config,
             quiet=True,
-            should_respond="always",
+            should_respond="never",
         )
 
     async def run(self, action_input: ActionInput[WaitParameters]) -> ActionOutput[WaitOutput]:
