@@ -86,8 +86,8 @@ class BaseAction(Generic[ActionConfigType, ParametersType, ResponseType]):  # ty
         params: Dict[str, Any],
         user_message_tracker: Optional[asyncio.Event] = None,
     ) -> ActionInput[ParametersType]:
-        if "user_message" in params:
-            del params["user_message"]
+        # if "user_message" in params:
+        #     del params["user_message"]
         return ActionInput(
             action_config=self.action_config,
             conversation_id=conversation_id,

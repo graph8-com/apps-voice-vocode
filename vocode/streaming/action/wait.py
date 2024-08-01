@@ -12,7 +12,12 @@ class WaitVocodeActionConfig(VocodeActionConfig, type="action_wait"):  # type: i
 
 
 class WaitParameters(BaseModel):
-    pass
+    user_message: str = Field(
+        ...,
+        description="A message to reply to the user with BEFORE we make the function call. "
+        "Essentially a live response informing them that the function is about to happen. "
+        "Eg Let me check the weather in San Francisco for you",
+    )
 
 
 class WaitOutput(BaseModel):
