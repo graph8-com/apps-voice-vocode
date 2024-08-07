@@ -13,7 +13,7 @@ async def test_wait_action_success_without_user_message_tracker():
         action_config=action_config,
         conversation_id=create_conversation_id(),
         user_message_tracker=None,
-        params=WaitParameters(),
+        params=WaitParameters(user_message="Ok, I'll hold."),
     )
 
     action_output = await wait_action.run(action_input)
