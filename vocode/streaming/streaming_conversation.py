@@ -421,7 +421,7 @@ class StreamingConversation(AudioPipeline[OutputDeviceType]):
                     return
                 if isinstance(agent_response, WaitResponse):
                     logger.debug(f"Agent requested to wait")
-                    self.conversation.schedule_action_on_idle(agent_response.seconds)
+                    await self.conversation.schedule_action_on_idle(agent_response.seconds)
                     return
 
                 agent_response_message = typing.cast(AgentResponseMessage, agent_response)
@@ -444,7 +444,7 @@ class StreamingConversation(AudioPipeline[OutputDeviceType]):
                     self.is_first_text_chunk = True
                     return
                 else:
-                    self.conversation.cancel_wait_idle_task()
+                    await self.conversation.cancel_wait_idle_task()
 
                 synthesizer_base_name: Optional[str] = (
                     synthesizer_base_name_if_should_report_to_sentry(self.conversation.synthesizer)
@@ -781,28 +781,37 @@ class StreamingConversation(AudioPipeline[OutputDeviceType]):
             # wait till the idle time would have passed the threshold if no action occurs
             await asyncio.sleep(self.idle_time_threshold)
 
-    def cancel_wait_idle_task(self):
+    async def cancel_wait_idle_task(self):
         """
         Cancels the current wait_idle_task if it exists.
         """
         if self.wait_idle_task:
             self.check_for_idle_paused = False
             self.wait_idle_task.cancel()
+            try:
+                await self.wait_idle_task
+            except asyncio.CancelledError:
+                pass
             self.wait_idle_task = None
 
-    def schedule_action_on_idle(self, seconds: int):
+    async def schedule_action_on_idle(self, seconds: int):
         """
         Schedules action_on_idle to be executed after N seconds.
         Cancels any existing scheduled task before creating a new one.
 
         Args:
-            seconds (int): The number of seconds to wait before executing action_on_idle.
+            seconds (int): The number of seconds for the silence timeout.
         """
-        self.cancel_wait_idle_task()
+        await self.cancel_wait_idle_task()
 
         async def delayed_action_on_idle():
-            await asyncio.sleep(seconds)
-            await self.action_on_idle()
+            try:
+                await asyncio.sleep(seconds)
+                await self.action_on_idle()
+            except asyncio.CancelledError:
+                pass
+            finally:
+                self.check_for_idle_paused = False
 
         self.check_for_idle_paused = True
         self.wait_idle_task = asyncio.create_task(delayed_action_on_idle())
