@@ -87,7 +87,7 @@ class CartesiaSynthesizer(BaseSynthesizer[CartesiaSynthesizerConfig]):
         self.num_channels = 1
         self.model_id = synthesizer_config.model_id
         self.voice_id = synthesizer_config.voice_id
-        self.client = self.cartesia_tts(api_key=self.api_key)
+        self.client = self.cartesia_tts(api_key=self.api_key, timeout=5)
         self.ws = None
         self.ctx = None
         self.no_more_inputs_task = None
