@@ -48,6 +48,12 @@ class AbstractConversationStateManager:
     def unmute_agent(self):
         raise NotImplementedError
 
+    def mute_transcriber(self):
+        raise NotImplementedError
+
+    def unmute_transcriber(self):
+        raise NotImplementedError
+
     def using_input_streaming_synthesizer(self):
         raise NotImplementedError
 
@@ -102,6 +108,12 @@ class ConversationStateManager(AbstractConversationStateManager):
 
     def unmute_agent(self):
         self._conversation.agent.is_muted = False
+
+    def mute_transcriber(self):
+        self._conversation.transcriber.mute()
+
+    def unmute_transcriber(self):
+        self._conversation.transcriber.unmute()
 
     def using_input_streaming_synthesizer(self):
         return isinstance(
