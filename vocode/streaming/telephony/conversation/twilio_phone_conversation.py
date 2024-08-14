@@ -53,7 +53,7 @@ class TwilioPhoneConversation(AbstractPhoneConversation[TwilioOutputDevice]):
         conversation_id: Optional[str] = None,
         events_manager: Optional[EventsManager] = None,
         record_call: bool = False,
-        speed_coefficient: float = 1.0,
+        speed_coefficient: float = 2.0,
         noise_suppression: bool = False,  # is currently a no-op
     ):
         super().__init__(

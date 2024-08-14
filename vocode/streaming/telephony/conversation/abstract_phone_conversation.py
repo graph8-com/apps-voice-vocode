@@ -48,7 +48,7 @@ class AbstractPhoneConversation(StreamingConversation[TelephonyOutputDeviceType]
         synthesizer_factory: AbstractSynthesizerFactory,
         conversation_id: Optional[str] = None,
         events_manager: Optional[EventsManager] = None,
-        speed_coefficient: float = 1.0,
+        speed_coefficient: float = 2.0,
     ):
         conversation_id = conversation_id or create_conversation_id()
         ctx_conversation_id.set(conversation_id)

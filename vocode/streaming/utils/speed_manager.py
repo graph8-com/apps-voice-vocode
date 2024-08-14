@@ -19,7 +19,7 @@ class SpeedManager:
     Initializes with a speed coefficient of 1.0, which corresponds to a WPM of 150.0 and uses a moving average to update the speed coefficient based on incoming transcriptions.
     """
 
-    def __init__(self, speed_coefficient: float = 1.0):
+    def __init__(self, speed_coefficient: float = 2.0):
         self.wpm_0 = BASE_WPM * speed_coefficient
         self.wpm = self.wpm_0
         self.speed_coefficient = speed_coefficient
