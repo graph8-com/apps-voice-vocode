@@ -49,14 +49,16 @@ CHAT_GPT_MAX_TOKENS = {
     "gpt-3.5-turbo": 16340,
     "gpt-3.5-turbo-1106": 16340,
     "gpt-3.5-turbo-0125": 16340,
-    "gpt-4-0314": 8150,
+    "gpt-4":8192,
+    "gpt-4-0613":8192,
+    "gpt-4-0314": 8192,
     "gpt-4-32k-0314": 32700,
-    "gpt-4-0613": 8150,
     "gpt-4-32k-0613": 32700,
     "gpt-4-0125-preview": 127940,
     "gpt-4-turbo": 127940,
-    "gpt-4o": 127940,
-    "gpt-4o-2024-05-13": 127940,
+    "gpt-4o": 128000,
+    "gpt-4o-2024-05-13": 128000,
+    "gpt-4o-2024-08-06":128000,
 }
 
 
@@ -83,10 +85,10 @@ TokenizerInfo = NamedTuple(
 def get_tokenizer_info(model: str) -> Optional[TokenizerInfo]:
     if "gpt-35-turbo" in model:
         model = "gpt-3.5-turbo"
-    elif "gpt-4o" == model:
-        model = "gpt-4o"
-    elif "gpt4" in model or "gpt-4" in model:
-        model = "gpt-4"
+    #elif "gpt-4o" == model:  (Delete this part of the code becase we assume we can write the name of the model correclty)
+    #    model = "gpt-4o"
+    #elif "gpt4" in model or "gpt-4" in model:
+    #    model = "gpt-4"
     try:
         encoding = tiktoken.encoding_for_model(model)
     except KeyError:
@@ -99,6 +101,10 @@ def get_tokenizer_info(model: str) -> Optional[TokenizerInfo]:
         "gpt-4-32k-0314",
         "gpt-4-0613",
         "gpt-4-32k-0613",
+        "gpt-4-turbo",
+        "gpt-4-turbo-2024-04-09",
+        "gpt-4o",
+        "gpt-4o-2024-05-13",
     }:
         tokens_per_message = 3
         tokens_per_name = 1
@@ -107,8 +113,12 @@ def get_tokenizer_info(model: str) -> Optional[TokenizerInfo]:
         tokens_per_name = -1  # if there's a name, the role is omitted
     elif "gpt-3.5-turbo" in model:
         logger.debug(
-            "Warning: gpt-3.5-turbo may update over time. Returning num tokens assuming gpt-3.5-turbo-0613."
-        )
+            "Warning: gpt-3.5-turbo may update over time. Returning num tokens assuming gpt-3.5-turbo-0613." )
+        tokens_per_message = 3
+        tokens_per_name = 1
+    elif "gpt-4o" in model:
+        logger.debug(
+            "Warning: gpt-4o may update over time. Returning num tokens assuming gpt-4o-2024-05-13.")
         tokens_per_message = 3
         tokens_per_name = 1
     elif "gpt-4" in model:
@@ -126,7 +136,10 @@ def get_tokenizer_info(model: str) -> Optional[TokenizerInfo]:
         tokens_per_message = 3
         tokens_per_name = 1
     else:
-        return None
+        raise NotImplementedError(
+            f"""num_tokens_from_messages() is not implemented for model {model}. 
+            Check correct spelling or model existance"""
+        )
 
     return TokenizerInfo(
         encoding=encoding,
