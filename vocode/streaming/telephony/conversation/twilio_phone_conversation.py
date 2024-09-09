@@ -1,3 +1,6 @@
+import aiohttp
+import asyncio
+from vocode.streaming.utils.async_requester import AsyncRequestor
 import base64
 import json
 import os
@@ -118,6 +121,9 @@ class TwilioPhoneConversation(AbstractPhoneConversation[TwilioOutputDevice]):
             if data["event"] == "start":
                 logger.debug(f"Media WS: Received event '{data['event']}': {message}")
                 self.output_device.stream_sid = data["start"]["streamSid"]
+
+                if "inbound" in data["start"]["tracks"]:
+                    await self.start_call_recording(call_sid=data["start"]["callSid"])
                 break
 
     async def _handle_ws_message(self, message) -> Optional[TwilioPhoneConversationWebsocketAction]:
@@ -137,3 +143,26 @@ class TwilioPhoneConversation(AbstractPhoneConversation[TwilioOutputDevice]):
             logger.debug("Stopping...")
             return TwilioPhoneConversationWebsocketAction.CLOSE_WEBSOCKET
         return None
+
+    async def start_call_recording(self, call_sid: str) -> dict:
+        try:
+            url = f"https://api.twilio.com/2010-04-01/Accounts/{self.twilio_config.account_sid}/Calls/{call_sid}/Recordings.json"
+
+            auth = aiohttp.BasicAuth(
+                login=self.twilio_config.account_sid, password=self.twilio_config.auth_token
+            )
+
+            payload = {
+                "RecordingStatusCallback": f"{self.base_url}/twilio/status",
+                "RecordingStatusCallbackEvent": "in-progress completed absent",
+            }
+
+            async with AsyncRequestor().get_session() as session:
+                async with session.post(url, data=payload, auth=auth) as response:
+                    if response.status != 201:  # Twilio returns 201 Created on success
+                        logger.error(
+                            f"Failed to start call recording: {response.status} {response.reason}"
+                        )
+                    return await response.json()
+        except Exception as e:
+            logger.exception(f"Exception recording call: {e}")
