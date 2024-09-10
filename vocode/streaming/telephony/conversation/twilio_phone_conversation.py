@@ -1,12 +1,11 @@
-import aiohttp
 import asyncio
-from vocode.streaming.utils.async_requester import AsyncRequestor
 import base64
 import json
 import os
 from enum import Enum
 from typing import Optional
 
+import aiohttp
 from fastapi import WebSocket
 from loguru import logger
 
@@ -27,6 +26,7 @@ from vocode.streaming.telephony.conversation.abstract_phone_conversation import 
     AbstractPhoneConversation,
 )
 from vocode.streaming.transcriber.abstract_factory import AbstractTranscriberFactory
+from vocode.streaming.utils.async_requester import AsyncRequestor
 from vocode.streaming.utils.events_manager import EventsManager
 from vocode.streaming.utils.state_manager import TwilioPhoneConversationStateManager
 
@@ -144,7 +144,7 @@ class TwilioPhoneConversation(AbstractPhoneConversation[TwilioOutputDevice]):
             return TwilioPhoneConversationWebsocketAction.CLOSE_WEBSOCKET
         return None
 
-    async def start_call_recording(self, call_sid: str) -> dict:
+    async def start_call_recording(self, call_sid: str) -> Optional[dict]:
         try:
             url = f"https://api.twilio.com/2010-04-01/Accounts/{self.twilio_config.account_sid}/Calls/{call_sid}/Recordings.json"
 
@@ -166,3 +166,4 @@ class TwilioPhoneConversation(AbstractPhoneConversation[TwilioOutputDevice]):
                     return await response.json()
         except Exception as e:
             logger.exception(f"Exception recording call: {e}")
+            return None
