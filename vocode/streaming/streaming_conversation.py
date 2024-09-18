@@ -107,6 +107,30 @@ BACKCHANNEL_PATTERNS = [
     r"yeah+",
     "makes sense",
 ]
+INTERRUPTION_PATTERNS = re.compile(
+    r"""
+    \b(?:
+        wait|stop|hang\s+on|
+        what(?:'s|\s|\?|$)|
+        who(?:'s|\s|\?|$)|
+        when(?:'s|\s|\?|$)|
+        where(?:'s|\s|\?|$)|
+        why(?:'s|\s|\?|$)|
+        how(?:'s|\s|\?|$)|
+        excuse\s+me|pardon|sorry|
+        actually|but|
+        just\s+a\s+moment|
+        one\s+second|
+        hold\s+up|
+        slow\s+down|
+        can\s+you\s+repeat|
+        i\s+don'?t\s+understand|
+        clarify|explain|
+        question|again
+    )\b
+""",
+    re.IGNORECASE | re.VERBOSE,
+)
 LOW_INTERRUPT_SENSITIVITY_BACKCHANNEL_UTTERANCE_LENGTH_THRESHOLD = 2
 
 
@@ -176,6 +200,11 @@ class StreamingConversation(AudioPipeline[OutputDeviceType]):
             return False
 
         def is_transcription_backchannel(self, transcription: Transcription):
+            cleaned = re.sub("[^\w\s]", "", transcription.message).strip().lower()
+
+            if INTERRUPTION_PATTERNS.search(cleaned):
+                return False
+
             num_words = len(transcription.message.strip().split())
             if (
                 self.conversation.agent.get_agent_config().interrupt_sensitivity == "high"
@@ -184,9 +213,9 @@ class StreamingConversation(AudioPipeline[OutputDeviceType]):
                 logger.info(f"High interrupt sensitivity; {num_words} word(s) not a backchannel")
                 return False
 
-            if num_words <= LOW_INTERRUPT_SENSITIVITY_BACKCHANNEL_UTTERANCE_LENGTH_THRESHOLD:
+            if num_words < LOW_INTERRUPT_SENSITIVITY_BACKCHANNEL_UTTERANCE_LENGTH_THRESHOLD:
                 return True
-            cleaned = re.sub("[^\w\s]", "", transcription.message).strip().lower()
+
             return any(re.fullmatch(regex, cleaned) for regex in BACKCHANNEL_PATTERNS)
 
         def _most_recent_transcript_messages(self) -> Iterator[Message]:
