@@ -146,11 +146,11 @@ class CartesiaSynthesizer(BaseSynthesizer[CartesiaSynthesizerConfig]):
                 output_format=self.output_format,
                 _experimental_voice_controls=self._experimental_voice_controls,
             )
-            if not is_sole_text_chunk:
-                try:
-                    self.refresh_no_more_inputs_task()
-                except Exception as e:
-                    logger.info(f"Caught error while sending no more inputs: {e}")
+            # if not is_sole_text_chunk:
+            #     try:
+            #         self.refresh_no_more_inputs_task()
+            #     except Exception as e:
+            #         logger.info(f"Caught error while sending no more inputs: {e}")
 
         async def chunk_generator(context):
             buffer = bytearray()
